@@ -1,13 +1,27 @@
 #include "lexer_dat.h"
+static int lineNo=1;
 
 lex getNewlex(){
     lex new = (lex) malloc(sizeof(tokenInfo));
     return new;
 }
 
+void clear(char* str){
+    int i;
+    for(i = 0; i < 30; i++)
+        str[i] = '\0';
+}
+
 link getNewNode(){
     link new = (link) malloc(sizeof(node));
     new->lex = getNewlex();
+    new->lex->token = (char*) malloc(30*sizeof(char));
+    new->lex->value = (char*) malloc(30*sizeof(char));
+    int i;
+    for(i = 0; i < 30; i++){
+         new->lex->value[i] = '\0';
+         new->lex->token[i] = '\0';
+    }
     new->next = NULL;
     return new;
 }
@@ -29,14 +43,15 @@ FILE* getStream(FILE *fp, buffer B, int bufflen){
     }
 
     //clearing the buffer
-    for(i = 0; i < bufflen; i++)
-        B[i] = '\0';
+    // for(i = 0; i < bufflen; i++)
+    //     B[i] = '\0';
 
     if(fread(B, (size_t)bufflen, (size_t) 1, fp))
     {
         printf("read some text\n");
         return fp;
     }
+    //printf("%s\n", B);
     return NULL;
 }
 
@@ -44,24 +59,34 @@ tokenInfo getNextToken(FILE *fp){
     // take in the advanced file pointer and call the function getStream to get
     // the filled buffer
     lex new = getNewlex();
-    if()
-
     return *new;
 }
 
 void addNode(lexChain chain, link new){
     link first = chain->first;
+    if(first == NULL){
+        chain->first = new;
+        return;
+    }
+
     while(first->next != NULL)
         first = first->next;
-
-    first->next= new;
+    first->next = new;
     // next of tail is NULL
     first->next->next = NULL;
 }
 
+int newLine(char* B, int curr){
+    while(B[curr] != '\n')
+        curr++;
+    curr++;
+    lineNo++;
+    return curr;
+}
+
 void printNode(link l){
-        printf("token = %s, value = %s, line = %d", l->lex->token, l->lex->value,
-              l->lex->line);
+    printf("token = %s, value = %s, line = %d", l->lex->token, l->lex->value,
+            l->lex->line);
 }
 
 void printList(lexChain chain){
@@ -73,182 +98,349 @@ void printList(lexChain chain){
     }
 }
 
-int isValidlexeme(char *lexeme){
+char* keywordsFieldId(char *lexeme){
     int i;
     for(i = 0; i < 24; i++){
         //strlwr(lexeme);
-        if(strcmp(lexemes[i], lexeme))
-            return i;
+        if(!strcmp(lexemes[i], lexeme))
+            break;
     }
-    return -1;
+    return tokens[i];
 }
 
-int isAlpha(char c){
+int isAllowed(char c){
     if(c >= 97 && c <= 122)
         return 1;
-    if(c >= 65 && c <= 90)
+    else if(c >= 65 && c <= 90)
+        return 1;
+    else if(c >= 48 && c <= 57)
         return 1;
     return 0;
 }
 
-int isNum(char c){
-    if(c >= 48 && c <= 57)
-        return 1;
-    return 0;
-}
-
-lexChain getTokens(File* fp){
+lexChain getAllTokens(FILE* fp){
     lexChain head1=(lexChain)malloc(sizeof(struct head));
     initializeChain(head1);
-    link point = head->first;
-    buffer B;
-    FILE *fp = fopen("testcase1.txt", "r");
-    int start = 0, end = 0;
+    link point = head1->first;
+    char B[bufflen];
+    FILE* temp = fopen("testcase1.txt", "a");
+    fprintf(temp,"%c",'$');
+    fclose(temp);
+
+    fp = fopen("testcase1.txt", "r");
+    static int start = 0, end = 0;
     if(fp==NULL)
     {
         printf("File not found\n");
         return NULL;
     }
+
     state = 0;
+    int len = 0;
     fp = getStream(fp, B, bufflen);
-    char ch = B[start];
-    while(1){
+    char ch = B[end];
+    char* tok = (char*) malloc(30*sizeof(char));
+    char* val = (char*) malloc(30*sizeof(char));
+    link new;
+    // add initial node
+
+    while(ch != '$'){
+        ch = B[end];
         switch(state)
         {
-            printf("in switch\n");
-            printf("case0 ch = %c\n", ch);
             case 0 :
                 if(ch=='['){
-                    link new = getNewNode();
-                    strcpy(new->lex->token,"TK_SQL");
-                    strcpy(new->lex->value,"[");
-                    new->lex->line = ++lineNo;
+                    strcpy(tok,"TK_SQL");
+                    strcpy(val,"[");
+                    new = getNewNode();
+
+                    strcpy(new->lex->value, val);
+                    strcpy(new->lex->token, tok);
+                    new->lex->line = lineNo;
                     addNode(head1, new);
+                    len=0;
+                    clear(val);
+                    clear(tok);
+
+
                     state = 0;
+                    end++;
+                    start = end;
                     break;
                 }
                 else if(ch==']')
                 {
+                    strcpy(tok,"TK_SQR");
+                    strcpy(val,"]");
+                    new = getNewNode();
 
-                    link new = getNewNode();
-                    strcpy(new->lex->token,"TK_SQR");
-                    strcpy(new->lex->value,"]");
-                    new->lex->line = ++lineNo;
+                    strcpy(new->lex->value, val);
+                    strcpy(new->lex->token, tok);
+                    new->lex->line = lineNo;
                     addNode(head1, new);
+                    len=0;
+                    clear(val);
+                    clear(tok);
+
+
+                    state = 0;
+                    end++;
+                    start = end;
+                    break;
                 }
                 else if(ch==';')
                 {
+                    strcpy(tok,"TK_SEM");
+                    strcpy(val,";");
 
-                    link new = getNewNode();
-                    strcpy(new->lex->token,"TK_SEM");
-                    strcpy(new->lex->value,";");
-                    new->lex->line = ++lineNo;
+                    new = getNewNode();
+
+                    strcpy(new->lex->value, val);
+                    strcpy(new->lex->token, tok);
+                    new->lex->line = lineNo;
                     addNode(head1, new);
+                    len=0;
+                    clear(val);
+                    clear(tok);
+
+
+
+                    state = 0;
+                    end++;
+                    break;
                 }
                 else if(ch==':')
                 {
+                    strcpy(tok,"TK_COLON");
+                    strcpy(val,":");
 
-                    link new = getNewNode();
-                    strcpy(new->lex->token,"TK_COLON");
-                    strcpy(new->lex->value,":");
-                    new->lex->line = ++lineNo;
+                    new = getNewNode();
+
+                    strcpy(new->lex->value, val);
+                    strcpy(new->lex->token, tok);
+                    new->lex->line = lineNo;
                     addNode(head1, new);
+                    len=0;
+                    clear(val);
+                    clear(tok);
+
+                    state = 0;
+                    end++;
+                    break;
                 }
                 else if(ch=='.')
                 {
+                    strcpy(tok,"TK_DOT");
+                    strcpy(val,".");
 
-                    link new = getNewNode();
-                    strcpy(new->lex->token,"TK_DOT");
-                    strcpy(new->lex->value,".");
-                    new->lex->line = ++lineNo;
+                    new = getNewNode();
+
+                    strcpy(new->lex->value, val);
+                    strcpy(new->lex->token, tok);
+                    new->lex->line = lineNo;
                     addNode(head1, new);
+                    len=0;
+                    clear(val);
+                    clear(tok);
+
+
+
+                    state = 0;
+                    end++;
+                    break;
                 }
                 else if(ch=='(')
                 {
+                    strcpy(tok,"TK_OP");
+                    strcpy(val,"(");
 
-                    link new = getNewNode();
-                    strcpy(new->lex->token,"TK_OP");
-                    strcpy(new->lex->value,"(");
-                    new->lex->line = ++lineNo;
+                    new = getNewNode();
+
+                    strcpy(new->lex->value, val);
+                    strcpy(new->lex->token, tok);
+                    new->lex->line = lineNo;
                     addNode(head1, new);
+                    len=0;
+                    clear(val);
+                    clear(tok);
+
+
+
+                    state = 0;
+                    end++;
+                    break;
                 }
                 else if(ch==')')
                 {
+                    strcpy(tok,"TK_CL");
+                    strcpy(val,")");
 
-                    link new = getNewNode();
-                    strcpy(new->lex->token,"TK_CL");
-                    strcpy(new->lex->value,")");
-                    new->lex->line = ++lineNo;
+                    new = getNewNode();
+
+                    strcpy(new->lex->value, val);
+                    strcpy(new->lex->token, tok);
+                    new->lex->line = lineNo;
                     addNode(head1, new);
+                    len=0;
+                    clear(val);
+                    clear(tok);
+
+
+
+                    state = 0;
+                    end++;
+                    break;
                 }
                 else if(ch=='+')
                 {
+                    strcpy(tok,"TK_PLUS");
+                    strcpy(val,"+");
+                    new = getNewNode();
 
-                    link new = getNewNode();
-                    strcpy(new->lex->token,"TK_PLUS");
-                    strcpy(new->lex->value,"+");
-                    new->lex->line = ++lineNo;
+                    strcpy(new->lex->value, val);
+                    strcpy(new->lex->token, tok);
+                    new->lex->line = lineNo;
                     addNode(head1, new);
+                    len=0;
+                    clear(val);
+                    clear(tok);
+
+
+
+                    state = 0;
+                    end++;
+                    break;
                 }
                 else if(ch=='-')
                 {
+                    strcpy(tok,"TK_MINUS");
+                    strcpy(val,"-");
 
-                    link new = getNewNode();
-                    strcpy(new->lex->token,"TK_MINUS");
-                    strcpy(new->lex->value,"-");
-                    new->lex->line = ++lineNo;
+                    new = getNewNode();
+
+                    strcpy(new->lex->value, val);
+                    strcpy(new->lex->token, tok);
+                    new->lex->line = lineNo;
                     addNode(head1, new);
+                    len=0;
+                    clear(val);
+                    clear(tok);
+
+
+
+                    state = 0;
+                    end++;
+                    break;
                 }
                 else if(ch=='*')
                 {
+                    strcpy(tok,"TK_MUL");
+                    strcpy(val,"*");
 
-                    link new = getNewNode();
-                    strcpy(new->lex->token,"TK_MUL");
-                    strcpy(new->lex->value,"*");
-                    new->lex->line = ++lineNo;
+                    new = getNewNode();
+
+                    strcpy(new->lex->value, val);
+                    strcpy(new->lex->token, tok);
+                    new->lex->line = lineNo;
                     addNode(head1, new);
+                    len=0;
+                    clear(val);
+                    clear(tok);
+
+
+
+                    state = 0;
+                    end++;
+                    break;
                 }
                 else if(ch=='/')
                 {
+                    strcpy(tok,"TK_DIV");
+                    strcpy(val,"/");
 
-                    link new = getNewNode();
-                    strcpy(new->lex->token,"TK_DIV");
-                    strcpy(new->lex->value,"/");
-                    new->lex->line = ++lineNo;
+                    new = getNewNode();
+
+                    strcpy(new->lex->value, val);
+                    strcpy(new->lex->token, tok);
+                    new->lex->line = lineNo;
                     addNode(head1, new);
+                    len=0;
+                    clear(val);
+                    clear(tok);
+
+
+
+                    state = 0;
+                    end++;
+                    break;
                 }
                 else if(ch=='%')
                 {
-                    printf("in %% \n");
+                    strcpy(tok,"TK_COMMENT");
+                    //printf("tok = %s", tok);
+                    strcpy(val,"comment");
 
-                    link new = getNewNode();
-                    strcpy(new->lex->token,"TK_COMMENT");
-                    strcpy(new->lex->value,"%");
-                    new->lex->line = ++lineNo;
+                    new = getNewNode();
+                    strcpy(new->lex->value, val);
+                    strcpy(new->lex->token, tok);
+                    new->lex->line = lineNo;
                     addNode(head1, new);
-                    ch = B[++end];
+                    len=0;
+                    clear(val);
+                    clear(tok);
+
+
+                    new = getNewNode();
+
+                    state = 0;
 
                     while(ch!='\n')
                         ch=B[++end];
                     start = end;
+                    state = 0;
+                    break;
                 }
                 else if(ch==',')
                 {
+                    strcpy(tok,"TK_COMMA");
+                    strcpy(val,",");
 
-                    link new = getNewNode();
-                    strcpy(new->lex->token,"TK_COMMA");
-                    strcpy(new->lex->value,",");
-                    new->lex->line = ++lineNo;
+                    new = getNewNode();
+
+                    strcpy(new->lex->value, val);
+                    strcpy(new->lex->token, tok);
+                    new->lex->line = lineNo;
                     addNode(head1, new);
+                    len=0;
+                    clear(val);
+                    clear(tok);
+
+
+
+                    state = 0;
+                    end++;
+                    break;
                 }
                 else if(ch=='~')
                 {
+                    strcpy(tok,"TK_NEG");
+                    strcpy(val,"~");
 
-                    link new = getNewNode();
-                    strcpy(new->lex->token,"TK_NEG");
-                    strcpy(new->lex->value,"~");
-                    new->lex->line = ++lineNo;
+                    new = getNewNode();
+
+                    strcpy(new->lex->value, val);
+                    strcpy(new->lex->token, tok);
+                    new->lex->line = lineNo;
                     addNode(head1, new);
+                    len=0;
+                    clear(val);
+                    clear(tok);
+
+
+
+                    state = 0;
+                    end++;
+                    break;
                 }
                 else if(ch=='&')
                 {
@@ -282,613 +474,1067 @@ lexChain getTokens(File* fp){
                 }
                 else if(ch=='_'){
                     ch = B[++end];
-                    strcpy(t.value,"_");
+                    strcpy(val,"_");
                     state = 13;
                 }
                 else if(ch >='0' && ch <= '9'){
-                    strcpy(t.value,"\0");
-                    t.value[strlen(t.value)+1]='\0';
-                    t.value[strlen(t.value)]=ch;
-                    ch=readCh();
+                    val[len]=ch;
+                    len++;
+                    ch=B[++end];
                     state = 20;
                 }
                 else if(ch=='b' || ch=='d'){
-                    strcpy(t.value,"\0");
-                    t.value[strlen(t.value)+1]='\0';
-                    t.value[strlen(t.value)]=ch;
-                    ch=readCh();
+                    //strcpy(val,"\0");
+                    //val[len+1]='\0';
+                    val[len]=ch;
+                    len++;
+                    ch = B[++end];
                     state=24;
                 }
                 else if(ch=='c'){
-                    ch=readCh();
-                    strcpy(t.value,"c");
+                    val[len] = ch;
+                    len++;
+                    ch=B[++end];
                     state=27;
                 }
                 else if((ch>= 'a' && ch<='z') && ch!='b'&& ch!='c' && ch!='d'){
-
-                    strcpy(t.value,"\0");
-                    t.value[strlen(t.value)+1]='\0';
-                    t.value[strlen(t.value)]=ch;
-                    ch=readCh();
+                    //strcpy(val,"\0");
+                    //val[len+1]='\0';
+                    val[len]=ch;
+                    len++;
+                    ch = B[++end];
                     state=28;
                 }
                 else if(ch=='\n'){
-
-                    lineNo++;
-                    strcpy(t.value, "0");
-                    return t;
-
+                    end = newLine(B, end);
+                    break;
                 }
                 else if(ch==' ' || ch=='\t'){
-                    strcpy(t.value, "0");
-                    return t;
-
+                    state = 0;
+                    printf("read blank\n");
+                    end++;
+                    ch = B[end];
+                    start = end;
+                    break;
                 }
 
-                else if(!isAllowed(ch)){
-                    strcpy(t.token,"TK_ERROR");
-                    strcpy(t.value,"<");
-                    t.value[strlen(t.value)+1]='\0';
-                    t.value[strlen(t.value)]=ch;
-                    t.line=++lineNo;
+                else {
+                    strcpy(tok,"TK_ERROR");
+                    val[len]=ch;
+
+                    new = getNewNode();
+                    strcpy(new->lex->value, val);
+                    strcpy(new->lex->token, tok);
+                    new->lex->line = lineNo;
+                    addNode(head1, new);
+
+                    len=0;
+                    clear(val);
+                    clear(tok);
+
+
+                    end = newLine(B, end);
+                    state=0;
                     printf("ERROR 2 - Unknowm symbol  %c at line number %d\n", ch,lineNo);
                 }
                 break;
             case 1:
                 if (ch=='&')
                 {
-                    ch=readCh();
+                    ch = B[++end];
                     state=2;
                 }
                 else{
-                    strcpy(t.token,"TK_ERROR");
-                    strcpy(t.value,"&");
-                    t.value[strlen(t.value)+1]='\0';
-                    t.value[strlen(t.value)]=ch;
-                    t.line=++lineNo;
-                    printf("ERROR_3: Unknown pattern %s at lineNo %d\n", t.value,t.line);
+                    strcpy(tok,"TK_ERROR");
+                    strcpy(val,"&");
+                    //val[len+1]='\0';
+                    val[len]=ch;
+                                       new = getNewNode();
+                    strcpy(new->lex->value, val);
+                    strcpy(new->lex->token, tok);
+                    new->lex->line = lineNo;
+                    addNode(head1, new);
+                    len=0;
+                    clear(val);
+                    clear(tok);
+
+                    end = newLine(B, end);
+                    state=0;
+                    printf("ERROR_3: Unknown pattern %s at lineNo %d\n", val, lineNo);
                 }
                 break;
             case 2:
                 if (ch=='&')
                 {
-                    strcpy(t.token,"TK_AND");
-                    strcpy(t.value,"&&&");
-                    t.line =++lineNo;
-                    return t;
+                    strcpy(tok,"TK_AND");
+                    strcpy(val,"&&&");
+                    new = getNewNode();
+
+                    strcpy(new->lex->value, val);
+                    strcpy(new->lex->token, tok);
+                    new->lex->line = lineNo;
+                    addNode(head1, new);
+                    len=0;
+                    clear(val);
+                    clear(tok);
+
+
+
+                    state = 0;
+                    end++;
+                    start = end;
+                    break;
                 }
                 else{
-                    strcpy(t.token,"TK_ERROR");
-                    strcpy(t.value,"&&");
-                    t.value[strlen(t.value)+1]='\0';
-                    t.value[strlen(t.value)]=ch;
-                    t.line=++lineNo;
-                    printf("ERROR_3: Unknown pattern %s at lineNo %d\n", t.value,t.line);
+                    strcpy(tok,"TK_ERROR");
+                    strcpy(val,"&&");
+                    //val[len+1]='\0';
+                    val[len]=ch;
+                                       new = getNewNode();
+                    strcpy(new->lex->value, val);
+                    strcpy(new->lex->token, tok);
+                    new->lex->line = lineNo;
+                    addNode(head1, new);
+                    len=0;
+                    clear(val);
+                    clear(tok);
+
+                    end = newLine(B, end);
+                    state=0;
+                    printf("ERROR_3: Unknown pattern %s at lineNo %d\n", val, lineNo);
                 }
                 break;
             case 3:
                 if (ch=='@')    {
-                    ch=readCh();
+                    ch = B[++end];
                     state=4;
                 }
                 else{
-                    strcpy(t.token,"TK_ERROR");
-                    strcpy(t.value,"@");
-                    t.value[strlen(t.value)+1]='\0';
-                    t.value[strlen(t.value)]=ch;
-                    t.line=++lineNo;
-                    printf("ERROR_3: Unknown pattern %s at lineNo %d\n", t.value,t.line);
+                    strcpy(tok,"TK_ERROR");
+                    strcpy(val,"@");
+                    //val[len+1]='\0';
+                    val[len]=ch;
+                                       new = getNewNode();
+                    strcpy(new->lex->value, val);
+                    strcpy(new->lex->token, tok);
+                    new->lex->line = lineNo;
+                    addNode(head1, new);
+                    len=0;
+                    clear(val);
+                    clear(tok);
+
+                    end = newLine(B, end);
+                    state=0;
+                    printf("ERROR_3: Unknown pattern %s at lineNo %d\n", val, lineNo);
                 }
                 break;
             case 4:
                 if (ch=='@')
                 {
-                    strcpy(t.token,"TK_OR");
-                    strcpy(t.value,"@@@");
-                    t.line =++lineNo;
-                    return t;
+                    strcpy(tok,"TK_OR");
+                    strcpy(val,"@@@");
+                    new = getNewNode();
+
+                    strcpy(new->lex->value, val);
+                    strcpy(new->lex->token, tok);
+                    new->lex->line = lineNo;
+                    addNode(head1, new);
+                    len=0;
+                    clear(val);
+                    clear(tok);
+
+
+
+                    state = 0;
+                    end++;
+                    start = end;
+                    break;
                 }
                 else{
-                    strcpy(t.token,"TK_ERROR");
-                    strcpy(t.value,"@@");
-                    t.value[strlen(t.value)+1]='\0';
-                    t.value[strlen(t.value)]=ch;
-                    t.line=++lineNo;
-                    printf("ERROR_3: Unknown pattern %s at lineNo %d\n", t.value,t.line);
+                    strcpy(tok,"TK_ERROR");
+                    strcpy(val,"@@");
+                    //val[len+1]='\0';
+                    val[len]=ch;
+                                       new = getNewNode();
+                    strcpy(new->lex->value, val);
+                    strcpy(new->lex->token, tok);
+                    new->lex->line = lineNo;
+                    addNode(head1, new);
+                    len=0;
+                    clear(val);
+                    clear(tok);
+
+                    end = newLine(B, end);
+                    state=0;
+                    printf("ERROR_3: Unknown pattern %s at lineNo %d\n", val, lineNo);
                 }
                 break;
             case 5:
                 if (ch=='=')
                 {
-                    strcpy(t.token,"TK_EQ");
-                    strcpy(t.value,"==");
-                    t.line =++lineNo;
+                    strcpy(tok,"TK_EQ");
+                    strcpy(val,"==");
 
-                    return t;
+                    new = getNewNode();
+
+                    strcpy(new->lex->value, val);
+                    strcpy(new->lex->token, tok);
+                    new->lex->line = lineNo;
+                    addNode(head1, new);
+                    len=0;
+                    clear(val);
+                    clear(tok);
+
+
+
+                    state = 0;
+                    end++;
+                    start = end;
+                    break;
                 }
                 else{
-                    strcpy(t.token,"TK_ERROR");
-                    strcpy(t.value,"=");
-                    t.value[strlen(t.value)+1]='\0';
-                    t.value[strlen(t.value)]=ch;
-                    t.line=++lineNo;
-                    printf("ERROR_3: Unknown pattern %s at lineNo %d\n", t.value,t.line);
+                    strcpy(tok,"TK_ERROR");
+                    strcpy(val,"=");
+                    //val[len+1]='\0';
+                    val[len]=ch;
+                    new = getNewNode();
+                    strcpy(new->lex->value, val);
+                    strcpy(new->lex->token, tok);
+                    new->lex->line = lineNo;
+                    addNode(head1, new);
+                    len=0;
+                    clear(val);
+                    clear(tok);
+
+                    end = newLine(B, end);
+                    state=0;
+                    printf("ERROR_3: Unknown pattern %s at lineNo %d\n", val, lineNo);
                 }
                 break;
             case 6:
                 if (ch=='=')
                 {
-                    strcpy(t.token,"TK_GE");
-                    strcpy(t.value,">=");
-                    t.line =++lineNo;
-                    return t;
+                    strcpy(tok,"TK_GE");
+                    strcpy(val,">=");
+                    new = getNewNode();
+
+                    strcpy(new->lex->value, val);
+                    strcpy(new->lex->token, tok);
+                    new->lex->line = lineNo;
+                    addNode(head1, new);
+                    len=0;
+                    clear(val);
+                    clear(tok);
+
+
+
+                    state = 0;
+                    end++;
+                    start = end;
+                    break;
                 }
                 else{
-                    strcpy(t.token,"TK_GT");
-                    strcpy(t.value,">");
-                    t.line =++lineNo;
-                    return t;
+                    strcpy(tok,"TK_GT");
+                    strcpy(val,">");
+                    new = getNewNode();
+
+                    strcpy(new->lex->value, val);
+                    strcpy(new->lex->token, tok);
+                    new->lex->line = lineNo;
+                    addNode(head1, new);
+                    len=0;
+                    clear(val);
+                    clear(tok);
+
+
+
+                    state = 0;
+                    end++;
+                    start = end;
+                    break;
                 }
                 break;
             case 7:
                 if (ch=='=')
                 {
-                    strcpy(t.token,"TK_LE");
-                    strcpy(t.value,"<=");
-                    t.line =++lineNo;
-                    return t;
+                    strcpy(tok,"TK_LE");
+                    strcpy(val,"<=");
+                    new = getNewNode();
+
+                    strcpy(new->lex->value, val);
+                    strcpy(new->lex->token, tok);
+                    new->lex->line = lineNo;
+                    addNode(head1, new);
+                    len=0;
+                    clear(val);
+                    clear(tok);
+
+
+
+                    state = 0;
+                    end++;
+                    start = end;
+                    break;
                 }
                 else if(ch=='-'){
-                    ch=readCh();
+                    ch = B[++end];
                     state=8;
                 }
                 else {
-                    strcpy(t.token,"TK_LT");
-                    strcpy(t.value,"<");
-                    t.line =++lineNo;
-                    return t;
+                    strcpy(tok,"TK_LT");
+                    strcpy(val,"<");
+                    new = getNewNode();
+
+                    strcpy(new->lex->value, val);
+                    strcpy(new->lex->token, tok);
+                    new->lex->line = lineNo;
+                    addNode(head1, new);
+                    len=0;
+                    clear(val);
+                    clear(tok);
+
+
+
+                    state = 0;
+                    end++;
+                    start = end;
+                    break;
                 }
                 break;
             case 8:
                 if(ch=='-'){
-                    ch=readCh();
+                    ch = B[++end];
                     state=9;
                 }
                 else{
-                    strcpy(t.token,"TK_ERROR");
-                    strcpy(t.value,"<-");
-                    t.value[strlen(t.value)+1]='\0';
-                    t.value[strlen(t.value)]=ch;
-                    t.line=++lineNo;
-                    printf("ERROR_3: Unknown pattern %s at lineNo %d\n", t.value,t.line);
-                    ch=readCh();
+                    strcpy(tok,"TK_ERROR");
+                    strcpy(val,"<-");
+                    //val[len+1]='\0';
+                    val[len]=ch;
+                                       new = getNewNode();
+                    strcpy(new->lex->value, val);
+                    strcpy(new->lex->token, tok);
+                    new->lex->line = lineNo;
+                    addNode(head1, new);
+                    len=0;
+                    clear(val);
+                    clear(tok);
+
+                    end = newLine(B, end);
+                    state=0;
+                    printf("ERROR_3: Unknown pattern %s at lineNo %d\n", val, lineNo);
+                    ch = B[++end];
                 }
                 break;
             case 9:
                 if (ch=='-')
                 {
-                    strcpy(t.token,"TK_ASSIGNOP");
-                    strcpy(t.value,"<---");
-                    t.line =++lineNo;
-                    return t;
+                    strcpy(tok,"TK_ASSIGNOP");
+                    strcpy(val,"<---");
+                    new = getNewNode();
+
+                    strcpy(new->lex->value, val);
+                    strcpy(new->lex->token, tok);
+                    new->lex->line = lineNo;
+                    addNode(head1, new);
+                    len=0;
+                    clear(val);
+                    clear(tok);
+
+
+
+                    state = 0;
+                    end++;
+                    start = end;
+                    break;
                 }
                 else{
-                    strcpy(t.token,"TK_ERROR");
-                    strcpy(t.value,"<--");
-                    t.value[strlen(t.value)+1]='\0';
-                    t.value[strlen(t.value)]=ch;
-                    t.line=++lineNo;
-                    printf("ERROR_3: Unknown pattern %s at lineNo %d\n", t.value,t.line);
+                    strcpy(tok,"TK_ERROR");
+                    strcpy(val,"<--");
+                    //val[len+1]='\0';
+                    val[len]=ch;
+                                       new = getNewNode();
+                    strcpy(new->lex->value, val);
+                    strcpy(new->lex->token, tok);
+                    new->lex->line = lineNo;
+                    addNode(head1, new);
+                    len=0;
+                    clear(val);
+                    clear(tok);
+
+                    end = newLine(B, end);
+                    state=0;
+                    printf("ERROR_3: Unknown pattern %s at lineNo %d\n", val, lineNo);
                 }
                 break;
             case 10:
                 if (ch=='=')
                 {
-                    strcpy(t.token,"TK_NE");
-                    strcpy(t.value,"!=");
-                    t.line =++lineNo;
-                    return t;
+                    strcpy(tok,"TK_NE");
+                    strcpy(val,"!=");
+                    new = getNewNode();
+
+                    strcpy(new->lex->value, val);
+                    strcpy(new->lex->token, tok);
+                    new->lex->line = lineNo;
+                    addNode(head1, new);
+                    len=0;
+                    clear(val);
+                    clear(tok);
+
+
+
+                    state = 0;
+                    end++;
+                    start = end;
+                    break;
                 }
                 else{
-                    strcpy(t.token,"TK_ERROR");
-                    strcpy(t.value,"!");
-                    t.value[strlen(t.value)+1]='\0';
-                    t.value[strlen(t.value)]=ch;
-                    t.line=++lineNo;
-                    printf("ERROR_3: Unknown pattern %s at lineNo %d\n", t.value,t.line);
+                    strcpy(tok,"TK_ERROR");
+                    strcpy(val,"!");
+                    //val[len+1]='\0';
+                    val[len]=ch;
+                                       new = getNewNode();
+                    strcpy(new->lex->value, val);
+                    strcpy(new->lex->token, tok);
+                    new->lex->line = lineNo;
+                    addNode(head1, new);
+                    len=0;
+                    clear(val);
+                    clear(tok);
+
+                    end = newLine(B, end);
+                    state=0;
+                    printf("ERROR_3: Unknown pattern %s at lineNo %d\n", val, lineNo);
                 }
                 break;
             case 11:
                 if (ch>= 'a' && ch<='z')
                 {
-                    strcpy(t.value,"#");
-                    t.value[strlen(t.value)+1]='\0';
-                    t.value[strlen(t.value)]=ch;
-                    ch=readCh();
+                    strcpy(val,"#");
+                    //val[len+1]='\0';
+                    val[len]=ch;
+                    len++;
+                    ch = B[++end];
                     state=12;
                 }
                 else{
-                    strcpy(t.token,"TK_ERROR");
-                    strcpy(t.value,"#");
-                    t.value[strlen(t.value)+1]='\0';
-                    t.value[strlen(t.value)]=ch;
-                    t.line=++lineNo;
-                    printf("ERROR_3: Unknown pattern %s\n", t.value);
+                    strcpy(tok,"TK_ERROR");
+                    strcpy(val,"#");
+                    //val[len+1]='\0';
+                    val[len]=ch;
+                                       new = getNewNode();
+                    strcpy(new->lex->value, val);
+                    strcpy(new->lex->token, tok);
+                    new->lex->line = lineNo;
+                    addNode(head1, new);
+                    len=0;
+                    clear(val);
+                    clear(tok);
+
+                    end = newLine(B, end);
+                    state=0;
+                    printf("ERROR_3: Unknown pattern %s\n", val);
                 }
                 break;
             case 12:
                 if (ch>= 'a' && ch<='z')
                 {
-                    t.value[strlen(t.value)+1]='\0';
-                    t.value[strlen(t.value)]=ch;
-                    t.line =++lineNo;
-                    ch=readCh();
+                    //val[len+1]='\0';
+                    val[len]=ch;
+                    len++;
+                    ch = B[++end];
                     state=12;
                 }
                 else{
-                    strcpy(t.token,"TK_RECORDID");
-                    t.line =++lineNo;
-                    return t;
+                    strcpy(tok,"TK_RECORDID");
+                    new = getNewNode();
+
+                    strcpy(new->lex->value, val);
+                    strcpy(new->lex->token, tok);
+                    new->lex->line = lineNo;
+                    addNode(head1, new);
+                    len=0;
+                    clear(val);
+                    clear(tok);
+
+
+
+                    state = 0;
+                    end++;
+                    start = end;
+                    break;
                 }
                 break;
             case 13:
                 if (((ch>= 'a' && ch<='z')||(ch>='A' && ch<='Z'))&& ch!='m')
                 {
-                    t.value[strlen(t.value)+1]='\0';
-                    t.value[strlen(t.value)]=ch;
-                    if(strlen(t.value)>20 )
+                    //val[len+1]='\0';
+                    val[len]=ch;
+                    len++;
+                    if(len>20 )
                     {
-                        strcpy(t.token,"TK_ERROR");
+                        strcpy(tok,"TK_ERROR");
+                        end = newLine(B, end);
+                        state=0;
                         printf("ERROR_1 : Identifier at line %d is longer than the prescribed length of 20 characters\n", lineNo);
                     }
-                    ch=readCh();
+                    ch = B[++end];
                     state=14;
                 }
                 else if (ch=='m')
                 {
-                    t.value[strlen(t.value)+1]='\0';
-                    t.value[strlen(t.value)]=ch;
-                    ch=readCh();
+                    //val[len+1]='\0';
+                    val[len]=ch;
+                    len++;
+                    printf("ch=m %s", val);
+                    ch = B[++end];
                     state=16;
                 }
                 else{
-                    strcpy(t.value,"_");
-                    t.value[strlen(t.value)+1]='\0';
-                    t.value[strlen(t.value)]=ch;
-                    t.line=++lineNo;
-                    printf("ERROR_3: Unknown pattern %s\n", t.value);
+                    strcpy(val,"_");
+                    //val[len+1]='\0';
+                    val[len]=ch;
+                                       new = getNewNode();
+                    strcpy(new->lex->value, val);
+                    strcpy(new->lex->token, tok);
+                    new->lex->line = lineNo;
+                    addNode(head1, new);
+                    len=0;
+                    clear(val);
+                    clear(tok);
+
+                    end = newLine(B, end);
+                    state=0;
+                    printf("ERROR_3: Unknown pattern %s\n", val);
                 }
                 break;
             case 14:
                 if ((ch>= 'a' && ch<='z')||(ch>='A' && ch<='Z'))
                 {
-                    t.value[strlen(t.value)+1]='\0';
-                    t.value[strlen(t.value)]=ch;
-                    if(strlen(t.value)>20 )
+                    //val[len+1]='\0';
+                    val[len]=ch;
+                    len++;
+                    if(len>20)
                     {
+                        end = newLine(B, end);
+                        state=0;
                         printf("ERROR_1 : Identifier at line %d is longer than the prescribed length of 20 characters\n", lineNo);
 
                     }
-                    ch=readCh();
+                    ch = B[++end];
                     state=14;
                 }
                 else if(ch >='0' && ch <= '9'){
-                    t.value[strlen(t.value)+1]='\0';
-                    t.value[strlen(t.value)]=ch;
-                    ch=readCh();
+                    //val[len+1]='\0';
+                    val[len]=ch;
+                    len++;
+                    ch = B[++end];
                     state=15;
                 }
                 else{
-                    strcpy(t.token,"TK_FUNID");
-                    t.line =++lineNo;
-                    return t;
+                    strcpy(tok,"TK_FUNID");
+
+                    new = getNewNode();
+
+                    strcpy(new->lex->value, val);
+                    strcpy(new->lex->token, tok);
+                    new->lex->line = lineNo;
+                    addNode(head1, new);
+                    len=0;
+                    clear(val);
+                    clear(tok);
+
+                    state = 0;
+                    end++;
+                    start = end;
+                    break;
                 }
                 break;
             case 15:
                 if(ch >='0' && ch <= '9'){
 
-                    t.value[strlen(t.value)+1]='\0';
-                    t.value[strlen(t.value)]=ch;
-                    if(strlen(t.value)>20){
+                    //val[len+1]='\0';
+                    val[len]=ch;
+                    len++;
+                    if(len>20){
+                        end = newLine(B, end);
+                        state=0;
                         printf("ERROR_1 : Identifier at line %d is longer than the prescribed length of 20 characters\n", lineNo);
-
                     }
-                    ch=readCh();
+                    ch = B[++end];
                     state=15;
                 }
                 else{
-                    strcpy(t.token,"TK_FUNID");
-                    t.line =++lineNo;
-                    return t;
+                    strcpy(tok,"TK_FUNID");
+                    new = getNewNode();
+
+                    strcpy(new->lex->value, val);
+                    strcpy(new->lex->token, tok);
+                    new->lex->line = lineNo;
+                    addNode(head1, new);
+                    len=0;
+                    clear(val);
+                    clear(tok);
+
+
+
+                    state = 0;
+                    end++;
+                    start = end;
+                    break;
                 }
                 break;
             case 16:
                 if(ch =='a'){
-                    t.value[strlen(t.value)+1]='\0';
-                    t.value[strlen(t.value)]=ch;
-                    ch=readCh();
+                    //val[len+1]='\0';
+                    val[len]=ch;
+                    len++;
+                    ch = B[++end];
                     state=17;
                 }
                 else if ((ch>= 'a' && ch<='z')||(ch>='A' && ch<='Z')&& ch!='a')
                 {
-                    t.value[strlen(t.value)+1]='\0';
-                    t.value[strlen(t.value)]=ch;
-                    ch=readCh();
+                    //val[len+1]='\0';
+                    val[len]=ch;
+                    len++;
+                    ch = B[++end];
                     state=14;
                 }
                 else if(ch >='0' && ch <= '9'){
-                    t.value[strlen(t.value)+1]='\0';
-                    t.value[strlen(t.value)]=ch;
-                    t.line =++lineNo;
-                    ch=readCh();
+                    //val[len+1]='\0';
+                    val[len]=ch;
+                    len++;
+                    ch = B[++end];
                     state=15;
                 }
                 else{
-                    strcpy(t.value,"_m");
-                    t.value[strlen(t.value)+1]='\0';
-                    t.value[strlen(t.value)]=ch;
-                    t.line=++lineNo;
-                    printf("ERROR_3: Unknown pattern %s\n", t.value);
+                    strcpy(val,"_m");
+                    //val[len+1]='\0';
+                    val[len]=ch;
+                                       new = getNewNode();
+                    strcpy(new->lex->value, val);
+                    strcpy(new->lex->token, tok);
+                    new->lex->line = lineNo;
+                    addNode(head1, new);
+                    len=0;
+                    clear(val);
+                    clear(tok);
+
+                    end = newLine(B, end);
+                    state=0;
+                    printf("ERROR_3: Unknown pattern %s\n", val);
                 }
                 break;
             case 17:
                 if(ch =='i'){
-                    t.value[strlen(t.value)+1]='\0';
-                    t.value[strlen(t.value)]=ch;
-                    ch=readCh();
+                    //val[len+1]='\0';
+                    val[len]=ch;
+                    len++;
+                    ch = B[++end];
                     state=18;
                 }
                 else if ((ch>= 'a' && ch<='z')||(ch>='A' && ch<='Z')&& ch!='i')
                 {
-                    t.value[strlen(t.value)+1]='\0';
-                    t.value[strlen(t.value)]=ch;
-                    ch=readCh();
+                    //val[len+1]='\0';
+                    val[len]=ch;
+                    len++;
+                    ch = B[++end];
                     state=14;
                 }
                 else if(ch >='0' && ch <= '9'){
-                    t.value[strlen(t.value)+1]='\0';
-                    t.value[strlen(t.value)]=ch;
-                    t.line =++lineNo;
-                    ch=readCh();
+                    //val[len+1]='\0';
+                    val[len]=ch;
+                    len++;
+                    ch = B[++end];
                     state=15;
                 }
                 else{
-                    strcpy(t.value,"_ma");
-                    t.value[strlen(t.value)+1]='\0';
-                    t.value[strlen(t.value)]=ch;
-                    t.line=++lineNo;
-                    printf("ERROR_3: Unknown pattern %s\n", t.value);
+                    strcpy(val,"_ma");
+                    //val[len+1]='\0';
+                    val[len]=ch;
+                                       new = getNewNode();
+                    strcpy(new->lex->value, val);
+                    strcpy(new->lex->token, tok);
+                    new->lex->line = lineNo;
+                    addNode(head1, new);
+                    len=0;
+                    clear(val);
+                    clear(tok);
+
+                    end = newLine(B, end);
+                    state=0;
+                    printf("ERROR_3: Unknown pattern %s\n", val);
                 }
                 break;
             case 18:
                 if(ch =='n'){
-                    t.value[strlen(t.value)+1]='\0';
-                    t.value[strlen(t.value)]=ch;
-                    ch=readCh();
+                    //val[len+1]='\0';
+                    val[len]=ch;
+                    len++;
+                    ch = B[++end];
                     state=19;
                 }
                 else if ((ch>= 'a' && ch<='z')||(ch>='A' && ch<='Z')&& ch!='n')
                 {
-                    t.value[strlen(t.value)+1]='\0';
-                    t.value[strlen(t.value)]=ch;
-                    ch=readCh();
+                    //val[len+1]='\0';
+                    val[len]=ch;
+                    len++;
+                    ch = B[++end];
                     state=14;
                 }
                 else if(ch >='0' && ch <= '9'){
-                    t.value[strlen(t.value)+1]='\0';
-                    t.value[strlen(t.value)]=ch;
-                    t.line =++lineNo;
-                    ch=readCh();
+                    //val[len+1]='\0';
+                    val[len]=ch;
+                    len++;
+                    ch = B[++end];
                     state=15;
                 }
                 else{
-                    strcpy(t.value,"_mai");
-                    t.value[strlen(t.value)+1]='\0';
-                    t.value[strlen(t.value)]=ch;
-                    t.line=++lineNo;
-                    printf("ERROR_3: Unknown pattern %s\n", t.value);
+                    strcpy(val,"_mai");
+                    //val[len+1]='\0';
+                    val[len]=ch;
+                                       new = getNewNode();
+                    strcpy(new->lex->value, val);
+                    strcpy(new->lex->token, tok);
+                    new->lex->line = lineNo;
+                    addNode(head1, new);
+                    len=0;
+                    clear(val);
+                    clear(tok);
+
+                    end = newLine(B, end);
+                    state=0;
+                    printf("ERROR_3: Unknown pattern %s\n", val);
                 }
                 break;
             case 19:
                 if ((ch>= 'a' && ch<='z')||(ch>='A' && ch<='Z'))    {
-                    t.value[strlen(t.value)+1]='\0';
-                    t.value[strlen(t.value)]=ch;
-                    ch=readCh();
+                    //val[len+1]='\0';
+                    val[len]=ch;
+                    len++;
+                    ch = B[++end];
                     state=14;
                 }
                 else if(ch >='0' && ch <= '9'){
-                    t.value[strlen(t.value)+1]='\0';
-                    t.value[strlen(t.value)]=ch;
-                    t.line =++lineNo;
-                    ch=readCh();
+                    //val[len+1]='\0';
+                    val[len]=ch;
+                    len++;
+                    ch = B[++end];
                     state=15;
                 }
                 else{
-                    strcpy(t.token,"TK_MAIN");
-                    strcpy(t.value,"_main");
-                    t.line =++lineNo;
-                    return t;
+                    strcpy(tok,"TK_MAIN");
+                    strcpy(val,"_main");
+                    printf("printed main\n");
+                    new = getNewNode();
+
+                    strcpy(new->lex->value, val);
+                    strcpy(new->lex->token, tok);
+                    new->lex->line = lineNo;
+                    addNode(head1, new);
+                    len=0;
+                    clear(val);
+                    clear(tok);
+
+
+
+                    state = 0;
+                    end++;
+                    start = end;
+                    break;
                 }
                 break;
             case 20:
                 if(ch >='0' && ch <= '9'){
-                    t.value[strlen(t.value)+1]='\0';
-                    t.value[strlen(t.value)]=ch;
-                    t.line =++lineNo;
-                    ch=readCh();
+                    //val[len+1]='\0';
+                    val[len]=ch;
+                    len++;
+                    ch = B[++end];
                     state=20;
                 }
                 else if(ch =='.' ){
-                    t.value[strlen(t.value)+1]='\0';
-                    t.value[strlen(t.value)]=ch;
-                    t.line =++lineNo;
-                    ch=readCh();
+                    //val[len+1]='\0';
+                    val[len]=ch;
+                    len++;
+                    ch = B[++end];
                     state=21;
                 }
                 else{
-                    strcpy(t.token,"TK_NUM");
-                    t.line =++lineNo;
-                    return t;
+                    strcpy(tok,"TK_NUM");
+                    new = getNewNode();
+
+                    strcpy(new->lex->value, val);
+                    strcpy(new->lex->token, tok);
+                    new->lex->line = lineNo;
+                    addNode(head1, new);
+                    len=0;
+                    clear(val);
+                    clear(tok);
+
+
+
+                    state = 0;
+                    end++;
+                    start = end;
+                    break;
                 }
                 break;
             case 21:
                 if(ch >='0' && ch <= '9'){
-                    t.value[strlen(t.value)+1]='\0';
-                    t.value[strlen(t.value)]=ch;
-                    t.line =++lineNo;
-                    ch=readCh();
+                    //val[len+1]='\0';
+                    val[len]=ch;
+                    len++;
+                    ch = B[++end];
                     state=22;
                 }
                 else{
-                    t.value[strlen(t.value)+1]='\0';
-                    t.value[strlen(t.value)]=ch;
-                    t.line=++lineNo;
-                    printf("ERROR_3: Unknown pattern %s\n", t.value);
+                    //val[len+1]='\0';
+                    val[len]=ch;
+                                       new = getNewNode();
+                    strcpy(new->lex->value, val);
+                    strcpy(new->lex->token, tok);
+                    new->lex->line = lineNo;
+                    addNode(head1, new);
+                    len=0;
+                    clear(val);
+                    clear(tok);
+
+                    end = newLine(B, end);
+                    state=0;
+                    printf("ERROR_3: Unknown pattern %s\n", val);
                 }
                 break;
             case 22:
                 if(ch >='0' && ch <= '9'){
-                    t.value[strlen(t.value)+1]='\0';
-                    t.value[strlen(t.value)]=ch;
-                    t.line =++lineNo;
-                    ch=readCh();
+                    //val[len+1]='\0';
+                    val[len]=ch;
+                    len++;
+                    ch = B[++end];
                     state=23;
                 }
                 else{
-                    t.value[strlen(t.value)+1]='\0';
-                    t.value[strlen(t.value)]=ch;
-                    t.line=++lineNo;
-                    printf("ERROR_3: Unknown pattern %s\n", t.value);
+                    //val[len+1]='\0';
+                    val[len]=ch;
+                                       new = getNewNode();
+                    strcpy(new->lex->value, val);
+                    strcpy(new->lex->token, tok);
+                    new->lex->line = lineNo;
+                    addNode(head1, new);
+                    len=0;
+                    clear(val);
+                    clear(tok);
+
+                    end = newLine(B, end);
+                    state=0;
+                    printf("ERROR_3: Unknown pattern %s\n", val);
                 }
                 break;
             case 23:
-                strcpy(t.token,"TK_RNUM");
-                t.line =++lineNo;
-                return t;
-                    break;
+                strcpy(tok,"TK_RNUM");
+                new->lex->line =++lineNo;
+                addNode(head1, new);
+
+
+                state = 0;
+                end++;
+                start = end;
+                break;
+                break;
             case 24:
                 if(ch >='2' && ch <= '7'){
-                    t.value[strlen(t.value)+1]='\0';
-                    t.value[strlen(t.value)]=ch;
-                    t.line =++lineNo;
-                    ch=readCh();
+                    //val[len+1]='\0';
+                    val[len]=ch;
+                    len++;
+                    ch = B[++end];
                     state=25;
                 }
                 else if (ch>= 'a' && ch<='z')
                 {
-                    t.value[strlen(t.value)+1]='\0';
-                    t.value[strlen(t.value)]=ch;
-                    ch=readCh();
+                    //val[len+1]='\0';
+                    val[len]=ch;
+                    len++;
+                    ch = B[++end];
                     state=28;
                 }
                 else{
-                    t.value[strlen(t.value)+1]='\0';
-                    t.value[strlen(t.value)]=ch;
-                    t.line=++lineNo;
-                    printf("ERROR_3: Unknown pattern %s\n", t.value);
-                    ch=readCh();
+                    //val[len+1]='\0';
+                    val[len]=ch;
+                                       new = getNewNode();
+                    strcpy(new->lex->value, val);
+                    strcpy(new->lex->token, tok);
+                    new->lex->line = lineNo;
+                    addNode(head1, new);
+                    len=0;
+                    clear(val);
+                    clear(tok);
+
+                    end = newLine(B, end);
+                    state=0;
+                    printf("ERROR_3: Unknown pattern %s\n", val);
+                    ch = B[++end];
                 }
                 break;
             case 25:
                 if(ch >='b' && ch <= 'd'){
-                    if(strlen(t.value)>20 )
+                    if(len>20 )
                     {
+                        end = newLine(B, end);
+                        state=0;
                         printf("ERROR_1 : Identifier at line %d is longer than the prescribed length of 20 characters\n", lineNo);
                     }
                     else{
-                        t.value[strlen(t.value)+1]='\0';
-                        t.value[strlen(t.value)]=ch;
-                        t.line =++lineNo;
-                    }
-                    ch=readCh();
+                        //val[len+1]='\0';
+                        val[len]=ch;
+                    len++;
+                        }
+                    ch = B[++end];
                     state=25;
                 }
                 else if (ch>= '2' && ch<='7')
                 {
-                    t.value[strlen(t.value)+1]='\0';
-                    t.value[strlen(t.value)]=ch;
-                    if(strlen(t.value)>20 )
+                    //val[len+1]='\0';
+                    val[len]=ch;
+                    len++;
+                    if(len>20 )
                     {
+                        end = newLine(B, end);
+                        state=0;
                         printf("ERROR_1 : Identifier at line %d is longer than the prescribed length of 20 characters\n", lineNo);
 
                     }
-                    ch=readCh();
+                    ch = B[++end];
                     state=26;
                 }
                 else{
-                    strcpy(t.token,"TK_ID");
-                    t.line =++lineNo;
-                    return t;
+                    strcpy(tok,"TK_ID");
+                    new = getNewNode();
+
+                    strcpy(new->lex->value, val);
+                    strcpy(new->lex->token, tok);
+                    new->lex->line = lineNo;
+                    addNode(head1, new);
+                    len=0;
+                    clear(val);
+                    clear(tok);
+
+
+
+                    state = 0;
+                    end++;
+                    start = end;
+                    break;
                 }
                 break;
             case 26:
                 if (ch>= '2' && ch<='7')
                 {
-                    t.value[strlen(t.value)+1]='\0';
-                    t.value[strlen(t.value)]=ch;
-                    if((strlen(t.value)) > 20 ){
+                    //val[len+1]='\0';
+                    val[len]=ch;
+                    len++;
+                    if((len) > 20 ){
+                        end = newLine(B, end);
+                        state=0;
                         printf("ERROR_1 : Identifier at line %d is longer than the prescribed length of 20 characters\n", lineNo);
                     }
-                    ch=readCh();
+                    ch = B[++end];
                     state=26;
                 }
                 else{
-                    strcpy(t.token,"TK_ID");
-                    t.line =++lineNo;
-                    return t;
+                    strcpy(tok,"TK_ID");
+                    new = getNewNode();
+
+                    strcpy(new->lex->value, val);
+                    strcpy(new->lex->token, tok);
+                    new->lex->line = lineNo;
+                    addNode(head1, new);
+                    len=0;
+                    clear(val);
+                    clear(tok);
+
+
+
+                    state = 0;
+                    end++;
+                    start = end;
+                    break;
                 }
                 break;
             case 27:
                 if(ch >='2' && ch <= '7'){
-                    t.value[strlen(t.value)+1]='\0';
-                    t.value[strlen(t.value)]=ch;
-                    t.line =++lineNo;
-                    ch=readCh();
+                    //val[len+1]='\0';
+                    val[len]=ch;
+                    len++;
+                    ch = B[++end];
                     state=25;
                 }
                 else if (ch>= 'a' && ch<='z')
                 {
-                    t.value[strlen(t.value)+1]='\0';
-                    t.value[strlen(t.value)]=ch;
-                    ch=readCh();
+                    //val[len+1]='\0';
+                    val[len]=ch;
+                    len++;
+                    ch = B[++end];
                     state=28;
                 }
                 else{
-                    t.value[strlen(t.value)+1]='\0';
-                    t.value[strlen(t.value)]=ch;
-                    t.line=++lineNo;
-                    printf("ERROR_3: Unknown pattern %s\n", t.value);
+                    //val[len+1]='\0';
+                    val[len]=ch;
+                                       new = getNewNode();
+                    strcpy(new->lex->value, val);
+                    strcpy(new->lex->token, tok);
+                    new->lex->line = lineNo;
+                    addNode(head1, new);
+                    len=0;
+                    clear(val);
+                    clear(tok);
+
+                    end = newLine(B, end);
+                    state=0;
+                    printf("ERROR_3: Unknown pattern %s\n", val);
                 }
                 break;
             case 28:
                 if (ch>= 'a' && ch<='z')
                 {
-                    t.value[strlen(t.value)+1]='\0';
-                    t.value[strlen(t.value)]=ch;
-                    ch=readCh();
+                    val[len] = ch;
+                    len++;
+                    ch = B[++end];
                     state=28;
                 }
                 else{
                     //call function for deciding keywords and fieldId
-                    strcpy(t.token, keywordsFieldId(t.value));
-                    t.line =++lineNo;
-                    return t;
+                    //printf("hello in kef");
+                    strcpy(tok, keywordsFieldId(val));
+                    new = getNewNode();
+
+                    strcpy(new->lex->value, val);
+                    strcpy(new->lex->token, tok);
+                    new->lex->line = lineNo;
+                    addNode(head1, new);
+
+                    len=0;
+                    clear(val);
+                    clear(tok);
+
+                    state = 0;
+                    end++;
+                    start = end;
+                    break;
                 }
                 break;
-                default : printf("Error file\n");
-                break;
+            default : end = newLine(B, end);
+                      state=0;
+                      printf("ERROR file\n");
+                      break;
         }
-}
+    }
+    return head1;
 }
 
 int main(){
-    FILE *fp = fopen("test", "r");
-    char output[128];
-    fp = getStream(fp, output, 20);
-    //int i;
-    //for(i = 0; i < )
-    printf("%s", output);
-    if(fp==NULL)
-        printf("\nis null\n");
+    lexChain head1;
+    FILE* fp1;
+    head1=getAllTokens(fp1);
+    printList(head1);
     return 0;
 }

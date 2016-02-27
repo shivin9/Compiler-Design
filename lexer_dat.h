@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-int bufflen = 60;
+int bufflen = 4096;
 typedef char* buffer;
 // buffer buffer1;
 // buffer buffer2;

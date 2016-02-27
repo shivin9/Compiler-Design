@@ -1,0 +1,141 @@
+read blank
+read blank
+read blank
+ERROR 2 - Unknowm symbol   at line number 5
+ERROR 2 - Unknowm symbol   at line number 6
+read blank
+read blank
+ERROR 2 - Unknowm symbol   at line number 7
+read blank
+read blank
+ERROR 2 - Unknowm symbol   at line number 8
+read blank
+ERROR_3: Unknown pattern  at lineNo 9
+read blank
+read blank
+read blank
+ERROR 2 - Unknowm symbol   at line number 10
+read blank
+read blank
+read blank
+ERROR 2 - Unknowm symbol   at line number 11
+read blank
+read blank
+read blank
+read blank
+ERROR 2 - Unknowm symbol   at line number 12
+read blank
+read blank
+read blank
+read blank
+ERROR 2 - Unknowm symbol   at line number 13
+read blank
+read blank
+ERROR 2 - Unknowm symbol   at line number 15
+ERROR 2 - Unknowm symbol   at line number 17
+ch=m mprinted main
+read blank
+ERROR 2 - Unknowm symbol   at line number 19
+read blank
+ERROR 2 - Unknowm symbol   at line number 20
+read blank
+read blank
+ERROR 2 - Unknowm symbol   at line number 21
+read blank
+read blank
+ERROR 2 - Unknowm symbol   at line number 22
+read blank
+ERROR 2 - Unknowm symbol   at line number 23
+read blank
+ERROR 2 - Unknowm symbol   at line number 24
+token = TK_COMMENT, value = comment, line = 1
+token = TK_COMMENT, value = comment, line = 2
+token = TK_COMMENT, value = comment, line = 3
+token = TK_FUNID, value = sumN, line = 4
+token = INPUT, value = input, line = 4
+token = TK_PARAMETER, value = parameter, line = 4
+token = TK_LIST, value = list, line = 4
+token = TK_SQL, value = [, line = 4
+token = TK_INT, value = int, line = 4
+token = TK_ID, value = d5cc34, line = 4
+token = TK_ERROR, value = , line = 4
+token = TK_OUTPUT, value = output, line = 5
+token = TK_PARAMETER, value = parameter, line = 5
+token = TK_LIST, value = list, line = 5
+token = TK_REAL, value = real, line = 5
+token = TK_ID, value = d3, line = 5
+token = TK_SEM, value = ;, line = 5
+token = TK_ERROR, value = , line = 5
+token = TK_TYPE, value = type, line = 6
+token = TK_INT, value = int, line = 6
+token = TK_COLON, value = :, line = 6
+token = TK_ID, value = b5b567, line = 6
+token = TK_ERROR, value = , line = 6
+token = TK_ID, value = b5b567, line = 7
+token = TK_ASSIGNOP, value = <---, line = 7
+token = TK_NUM, value = 1, line = 7
+token = TK_ERROR, value = , line = 7
+token = TK_ID, value = d3, line = 8
+token = TK_ERROR, value =  , line = 8
+token = TK_WHILE, value = while, line = 9
+token = TK_OP, value = (, line = 9
+token = TK_ID, value = b5b567, line = 9
+token = TK_LE, value = <=, line = 9
+token = TK_ID, value = d5cc34, line = 9
+token = TK_ERROR, value = , line = 9
+token = TK_READ, value = read, line = 10
+token = TK_ID, value = c3bd, line = 10
+token = TK_SEM, value = ;, line = 10
+token = TK_ERROR, value = , line = 10
+token = TK_ID, value = d3, line = 11
+token = TK_ASSIGNOP, value = <---, line = 11
+token = TK_ID, value = d3, line = 11
+token = TK_PLUS, value = +, line = 11
+token = TK_ID, value = c3bd, line = 11
+token = TK_ERROR, value = , line = 11
+token = TK_ID, value = b5b567, line = 12
+token = TK_ASSIGNOP, value = <---, line = 12
+token = TK_ID, value = b5b567, line = 12
+token = TK_PLUS, value = +, line = 12
+token = TK_NUM, value = 1, line = 12
+token = TK_ERROR, value = , line = 12
+token = TK_ENDWHILE, value = endwhile, line = 13
+token = TK_RETURN, value = return, line = 14
+token = TK_SQL, value = [, line = 14
+token = TK_ID, value = d3, line = 14
+token = TK_SEM, value = ;, line = 14
+token = TK_ERROR, value = , line = 14
+token = TK_END, value = end, line = 15
+token = TK_ERROR, value = , line = 16
+token = TK_MAIN, value = _main, line = 17
+token = TK_TYPE, value = type, line = 18
+token = TK_INT, value = int, line = 18
+token = TK_COLON, value = :, line = 18
+token = TK_ID, value = b3, line = 18
+token = TK_ERROR, value = , line = 18
+token = TK_TYPE, value = type, line = 19
+token = TK_REAL, value = real, line = 19
+token = TK_COLON, value = :, line = 19
+token = TK_ID, value = c4bd56, line = 19
+token = TK_ERROR, value = , line = 19
+token = TK_ID, value = b3, line = 20
+token = TK_ASSIGNOP, value = <---, line = 20
+token = TK_NUM, value = 7, line = 20
+token = TK_ERROR, value = , line = 20
+token = TK_SQL, value = [, line = 21
+token = TK_ID, value = c4bd56, line = 21
+token = TK_ASSIGNOP, value = <---, line = 21
+token = TK_CALL, value = call, line = 21
+token = TK_FUNID, value = sumN, line = 21
+token = TK_WITH, value = with, line = 21
+token = TK_PARAMETERS, value = parameters, line = 21
+token = TK_SQL, value = [, line = 21
+token = TK_ID, value = b3, line = 21
+token = TK_SEM, value = ;, line = 21
+token = TK_ERROR, value = , line = 21
+token = TK_WRITE, value = write, line = 22
+token = TK_ID, value = c4bd56, line = 22
+token = TK_SEM, value = ;, line = 22
+token = TK_ERROR, value = , line = 22
+token = TK_RETURN, value = return, line = 23
+token = TK_ERROR, value = , line = 23
