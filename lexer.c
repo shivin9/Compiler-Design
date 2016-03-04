@@ -1,5 +1,6 @@
 #include "lexer_dat.h"
 static int lineNo=1;
+//int bufflen = 4096;
 
 lex getNewlex(){
     lex new = (lex) malloc(sizeof(tokenInfo));
@@ -19,8 +20,8 @@ link getNewNode(){
     new->lex->value = (char*) malloc(30*sizeof(char));
     int i;
     for(i = 0; i < 30; i++){
-         new->lex->value[i] = '\0';
-         new->lex->token[i] = '\0';
+        new->lex->value[i] = '\0';
+        new->lex->token[i] = '\0';
     }
     new->next = NULL;
     return new;
@@ -48,18 +49,22 @@ FILE* getStream(FILE *fp, buffer B, int bufflen){
 
     if(fread(B, (size_t)bufflen, (size_t) 1, fp))
     {
-        printf("read some text\n");
         return fp;
     }
-    //printf("%s\n", B);
+    printf("%s\n", B);
     return NULL;
 }
 
-tokenInfo getNextToken(FILE *fp){
+lex getNextToken(FILE *fp, int curr, lexChain chain){
     // take in the advanced file pointer and call the function getStream to get
     // the filled buffer
-    lex new = getNewlex();
-    return *new;
+    int i;
+    lex ret;
+    link first = chain->first;
+    for(i = 0; i < curr; i++){
+        first = first->next;
+    }
+    return first -> lex;
 }
 
 void addNode(lexChain chain, link new){
@@ -122,18 +127,14 @@ lexChain getAllTokens(FILE* fp){
     lexChain head1=(lexChain)malloc(sizeof(struct head));
     initializeChain(head1);
     link point = head1->first;
+    bufflen = 4096;
     char B[bufflen];
-    FILE* temp = fopen("testcase1.txt", "a");
+
+    FILE* temp = fopen("testcase4.txt", "a");
     fprintf(temp,"%c",'$');
     fclose(temp);
 
-    fp = fopen("testcase1.txt", "r");
     static int start = 0, end = 0;
-    if(fp==NULL)
-    {
-        printf("File not found\n");
-        return NULL;
-    }
 
     state = 0;
     int len = 0;
@@ -142,10 +143,10 @@ lexChain getAllTokens(FILE* fp){
     char* tok = (char*) malloc(30*sizeof(char));
     char* val = (char*) malloc(30*sizeof(char));
     link new;
-    // add initial node
 
     while(ch != '$'){
         ch = B[end];
+        printf("state = %d\n", state);
         switch(state)
         {
             case 0 :
@@ -511,7 +512,6 @@ lexChain getAllTokens(FILE* fp){
                 }
                 else if(ch==' ' || ch=='\t'){
                     state = 0;
-                    printf("read blank\n");
                     end++;
                     ch = B[end];
                     start = end;
@@ -522,20 +522,17 @@ lexChain getAllTokens(FILE* fp){
                     strcpy(tok,"TK_ERROR");
                     val[len]=ch;
 
-                    new = getNewNode();
+                    //new = getNewNode();
                     strcpy(new->lex->value, val);
                     strcpy(new->lex->token, tok);
                     new->lex->line = lineNo;
-                    addNode(head1, new);
-
+                    //addNode(head1, new);
                     len=0;
                     clear(val);
                     clear(tok);
-
-
                     end = newLine(B, end);
                     state=0;
-                    printf("ERROR 2 - Unknowm symbol  %c at line number %d\n", ch,lineNo);
+                    //printf("ERROR 2 - Unknowm symbol  %c at line number %d\n", ch,lineNo);
                 }
                 break;
             case 1:
@@ -549,7 +546,7 @@ lexChain getAllTokens(FILE* fp){
                     strcpy(val,"&");
                     //val[len+1]='\0';
                     val[len]=ch;
-                                       new = getNewNode();
+                    new = getNewNode();
                     strcpy(new->lex->value, val);
                     strcpy(new->lex->token, tok);
                     new->lex->line = lineNo;
@@ -590,7 +587,7 @@ lexChain getAllTokens(FILE* fp){
                     strcpy(val,"&&");
                     //val[len+1]='\0';
                     val[len]=ch;
-                                       new = getNewNode();
+                    new = getNewNode();
                     strcpy(new->lex->value, val);
                     strcpy(new->lex->token, tok);
                     new->lex->line = lineNo;
@@ -614,7 +611,7 @@ lexChain getAllTokens(FILE* fp){
                     strcpy(val,"@");
                     //val[len+1]='\0';
                     val[len]=ch;
-                                       new = getNewNode();
+                    new = getNewNode();
                     strcpy(new->lex->value, val);
                     strcpy(new->lex->token, tok);
                     new->lex->line = lineNo;
@@ -655,7 +652,7 @@ lexChain getAllTokens(FILE* fp){
                     strcpy(val,"@@");
                     //val[len+1]='\0';
                     val[len]=ch;
-                                       new = getNewNode();
+                    new = getNewNode();
                     strcpy(new->lex->value, val);
                     strcpy(new->lex->token, tok);
                     new->lex->line = lineNo;
@@ -811,7 +808,7 @@ lexChain getAllTokens(FILE* fp){
                     strcpy(val,"<-");
                     //val[len+1]='\0';
                     val[len]=ch;
-                                       new = getNewNode();
+                    new = getNewNode();
                     strcpy(new->lex->value, val);
                     strcpy(new->lex->token, tok);
                     new->lex->line = lineNo;
@@ -853,7 +850,7 @@ lexChain getAllTokens(FILE* fp){
                     strcpy(val,"<--");
                     //val[len+1]='\0';
                     val[len]=ch;
-                                       new = getNewNode();
+                    new = getNewNode();
                     strcpy(new->lex->value, val);
                     strcpy(new->lex->token, tok);
                     new->lex->line = lineNo;
@@ -894,7 +891,7 @@ lexChain getAllTokens(FILE* fp){
                     strcpy(val,"!");
                     //val[len+1]='\0';
                     val[len]=ch;
-                                       new = getNewNode();
+                    new = getNewNode();
                     strcpy(new->lex->value, val);
                     strcpy(new->lex->token, tok);
                     new->lex->line = lineNo;
@@ -923,7 +920,7 @@ lexChain getAllTokens(FILE* fp){
                     strcpy(val,"#");
                     //val[len+1]='\0';
                     val[len]=ch;
-                                       new = getNewNode();
+                    new = getNewNode();
                     strcpy(new->lex->value, val);
                     strcpy(new->lex->token, tok);
                     new->lex->line = lineNo;
@@ -995,7 +992,7 @@ lexChain getAllTokens(FILE* fp){
                     strcpy(val,"_");
                     //val[len+1]='\0';
                     val[len]=ch;
-                                       new = getNewNode();
+                    new = getNewNode();
                     strcpy(new->lex->value, val);
                     strcpy(new->lex->token, tok);
                     new->lex->line = lineNo;
@@ -1112,7 +1109,7 @@ lexChain getAllTokens(FILE* fp){
                     strcpy(val,"_m");
                     //val[len+1]='\0';
                     val[len]=ch;
-                                       new = getNewNode();
+                    new = getNewNode();
                     strcpy(new->lex->value, val);
                     strcpy(new->lex->token, tok);
                     new->lex->line = lineNo;
@@ -1153,7 +1150,7 @@ lexChain getAllTokens(FILE* fp){
                     strcpy(val,"_ma");
                     //val[len+1]='\0';
                     val[len]=ch;
-                                       new = getNewNode();
+                    new = getNewNode();
                     strcpy(new->lex->value, val);
                     strcpy(new->lex->token, tok);
                     new->lex->line = lineNo;
@@ -1194,7 +1191,7 @@ lexChain getAllTokens(FILE* fp){
                     strcpy(val,"_mai");
                     //val[len+1]='\0';
                     val[len]=ch;
-                                       new = getNewNode();
+                    new = getNewNode();
                     strcpy(new->lex->value, val);
                     strcpy(new->lex->token, tok);
                     new->lex->line = lineNo;
@@ -1291,7 +1288,7 @@ lexChain getAllTokens(FILE* fp){
                 else{
                     //val[len+1]='\0';
                     val[len]=ch;
-                                       new = getNewNode();
+                    new = getNewNode();
                     strcpy(new->lex->value, val);
                     strcpy(new->lex->token, tok);
                     new->lex->line = lineNo;
@@ -1316,7 +1313,7 @@ lexChain getAllTokens(FILE* fp){
                 else{
                     //val[len+1]='\0';
                     val[len]=ch;
-                                       new = getNewNode();
+                    new = getNewNode();
                     strcpy(new->lex->value, val);
                     strcpy(new->lex->token, tok);
                     new->lex->line = lineNo;
@@ -1360,7 +1357,7 @@ lexChain getAllTokens(FILE* fp){
                 else{
                     //val[len+1]='\0';
                     val[len]=ch;
-                                       new = getNewNode();
+                    new = getNewNode();
                     strcpy(new->lex->value, val);
                     strcpy(new->lex->token, tok);
                     new->lex->line = lineNo;
@@ -1386,8 +1383,8 @@ lexChain getAllTokens(FILE* fp){
                     else{
                         //val[len+1]='\0';
                         val[len]=ch;
-                    len++;
-                        }
+                        len++;
+                    }
                     ch = B[++end];
                     state=25;
                 }
@@ -1418,10 +1415,8 @@ lexChain getAllTokens(FILE* fp){
                     clear(val);
                     clear(tok);
 
-
-
                     state = 0;
-                    end++;
+                    //end++;
                     start = end;
                     break;
                 }
@@ -1479,7 +1474,7 @@ lexChain getAllTokens(FILE* fp){
                 else{
                     //val[len+1]='\0';
                     val[len]=ch;
-                                       new = getNewNode();
+                    new = getNewNode();
                     strcpy(new->lex->value, val);
                     strcpy(new->lex->token, tok);
                     new->lex->line = lineNo;
@@ -1517,7 +1512,7 @@ lexChain getAllTokens(FILE* fp){
                     clear(tok);
 
                     state = 0;
-                    end++;
+                    //end++;
                     start = end;
                     break;
                 }
@@ -1531,10 +1526,10 @@ lexChain getAllTokens(FILE* fp){
     return head1;
 }
 
-int main(){
+/*int main(){
     lexChain head1;
     FILE* fp1;
     head1=getAllTokens(fp1);
     printList(head1);
     return 0;
-}
+}*/
