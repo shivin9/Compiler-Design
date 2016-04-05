@@ -179,7 +179,7 @@ void insert(parseTree temp, int rule, int gra[][10], lex lexem)
 
         temp1->left = NULL;
         temp1->down = NULL;
-
+        temp1->prev = NULL;
         //printf("token = %s, value = %s, line = %d \n", lexem->token, lexem->value, lexem->line);
 
         // new node is definitely the child of temp
@@ -203,10 +203,8 @@ void insert(parseTree temp, int rule, int gra[][10], lex lexem)
         temp1->line = lexem->line;
 
         // insert at temp only
-        if(temp->down==NULL){
+        if(temp->down==NULL)
             temp->down = temp1;
-            temp->down->prev == NULL;
-        }
 
         // finding a child which has no down pointer by traversing through the list of children
         else
@@ -219,7 +217,7 @@ void insert(parseTree temp, int rule, int gra[][10], lex lexem)
             }
             // set the left child to temp1
             right->left = temp1;
-            right->left->prev = right;
+            temp1->prev = right;
         }
         i++;
     }
@@ -456,6 +454,7 @@ void printTree(parseTree head)
     }
 
     char* up = (char*) malloc(30*sizeof(char));
+    char* prev = (char*) malloc(30*sizeof(char));
     char* lexcurrnode = (char*) malloc(30*sizeof(char));
     char* numval = (char*) malloc(30*sizeof(char));
     char* isleaf = (char*) malloc(30*sizeof(char));
@@ -485,10 +484,15 @@ void printTree(parseTree head)
     else
         strcpy(numval, "-----");
 
+    if(head->prev == NULL)
+        strcpy(prev, "NULL");
+    else
+        strcpy(prev, terms[head->prev->val]);
+
     //int line = head->lexeme->line;
     //printf("copied everything... line= %d\n", line);
 
-    printf("%s, %d, %s, %s, %s, %s, %s\n",lexcurrnode, head->line, tok, numval, up, isleaf, symbol);
+    printf("%s, %d, %s, %s, %s, %s, %s, p = %s\n",lexcurrnode, head->line, tok, numval, up, isleaf, symbol, prev);
     free(tok);
     free(symbol);
     free(lexcurrnode);
@@ -504,29 +508,32 @@ parseTree createAst(parseTree pTree){
     parseTree ast;
     ast = pTree;
     //printTree(ast);
-    removePunc(ast);
-    //pullUpSingle(ast);
-    // terminals now have children
-    //firstUp(ast);
+    removePunc(ast, NULL);
+    pullUpSingle(ast, NULL);
     //printTree(ast);
+
+    //firstUp(ast);
+    //removeCondi(ast);
+    // terminals now have children
     return pTree;
 }
 
-void removePunc(parseTree ast){
+void removePunc(parseTree ast, parseTree prev){
     if(ast == NULL)
         return;
 
     int tok_value = ast->val;
     if (tok_value < 48 && ast->down == NULL){
         printf("inside EPS rule\n");
-        if(ast->prev != NULL){
-            ast->prev->left = ast->left;
-            removePunc(ast->left);
+        if(prev != NULL){
+            prev->left = ast->left;
+            ast->left->prev = prev;
+            removePunc(prev, ast->left);
             free(ast);
         }
         else{
             ast->up->down = ast->down;
-            removePunc(ast->left);
+            removePunc(ast->left, NULL);
         }
     }
     else if
@@ -535,70 +542,86 @@ void removePunc(parseTree ast){
         tok_value == 77 || tok_value == 79 || tok_value == 80 || tok_value == 81 || tok_value == 82 ||
         tok_value == 83 || tok_value == 84 || tok_value == 85 || tok_value == 91){
         // ast is the left most child
-        printf("removing terminal %s\n", terms[ast->val]);
-        if(ast->prev != NULL){
-            ast->prev->left = ast->left;
-            removePunc(ast->left);
+        if(prev != NULL){
+            prev->left = ast->left;
+            if(ast->left != NULL)
+                ast->left->prev = prev;
             free(ast);
+            removePunc(ast->left, prev);
         }
         else{
             ast->up->down = ast->left;
+            if(ast->left != NULL)
+                ast->left->prev = prev;
             //ast->left->down = ast->down;
-            removePunc(ast->left);
+            removePunc(ast->left, NULL);
             free(ast);
         }
     }
     else{
-            removePunc(ast->down);
-            removePunc(ast->left);
+            removePunc(ast->down, NULL);
+            removePunc(ast->left, ast);
     }
 }
 
 // clean rules of type <stmt> ===> <assignmentStmt>
-void pullUpSingle(parseTree ast){
+void pullUpSingle(parseTree ast, parseTree prev){
     if(ast == NULL)
         return;
     int tok_value = ast->val;
 
     if (tok_value == 7  || tok_value == 8  || tok_value == 9  || tok_value == 19 || tok_value == 21 || tok_value == 27 || tok_value == 32 || tok_value == 37 || tok_value == 38 || tok_value == 39 || tok_value == 41 || tok_value == 42 || tok_value == 43 || tok_value == 44 || tok_value == 45 || tok_value == 46 || tok_value == 47){
-        printf("removing %s\n", terms[ast->val]);
-        if(ast->prev == NULL){
+        if(prev == NULL){
             ast->up->down = ast->down;
             ast->down->left = ast->left;
             ast->down->up = ast->up;
-            pullUpSingle(ast->down);
+            if(ast->left != NULL)
+                ast->left->prev = prev;
+            pullUpSingle(ast->down, NULL);
             //pullUpSingle(ast->left, ast);
             free(ast);
         }
         else{
-            ast->prev->left = ast->down;
+            prev->left = ast->down;
             ast->down->left = ast->left;
             ast->down->up = ast->up;
+            if(ast->left != NULL)
+                ast->left->prev = prev;
             //pullUpSingle(ast->down, NULL);
-            pullUpSingle(ast->down);
+            pullUpSingle(ast->left, ast);
             free(ast);
         }
-
     }
     else{
-            pullUpSingle(ast->down);
-            pullUpSingle(ast->left);
+            pullUpSingle(ast->down, NULL);
+            pullUpSingle(ast->left, ast);
     }
 }
-/*
+
 void firstUp(parseTree ast){
     if (ast == NULL)
         return;
     int tok_value = ast->val;
     // all terminals... so ast->down == NULL
+    if(tok_value == 58)
+        printf("%s found while!!\n");
     if (tok_value == 51 || tok_value == 54 || tok_value == 58 || tok_value == 66 || tok_value == 67 ||
         tok_value == 69 || tok_value == 72 || tok_value == 73 || tok_value == 74 || tok_value == 78 ||
         tok_value == 92 || tok_value == 102){
+            printf("pulling up = %s\n", terms[ast->val]);
+            printf("removing ast->up= %s\n", terms[ast->up->val]);
 
         // ast->up is the left most child
-        if(ast->up->down->val == ast->val){
-            ast->up->up->down = ast;
+        if(ast->up->prev == NULL){
+            if(ast->up->up != NULL){
+                ast->up->up->down = ast;
+            }
+            else{
+                printf("***ast->up = %s\n", terms[ast->up->val]);
+            }
             ast->down = ast->left;
+            if(ast->down != NULL)
+                ast->down->prev = NULL;
             ast->left = ast->up->left;
             ast->up = ast->up->up;
             // change the up pointer of all the leaves
@@ -607,15 +630,74 @@ void firstUp(parseTree ast){
                 temp->up = ast;
                 temp = temp->left;
             }
-            firstUp(ast->down);
+            firstUp(ast->left);
+            //firstUp(ast->down);
         }
-        // ast->up lies in the middle somewhere
+        // ast->up lies somewhere in between
         else{
-            ast->
+            ast->down = ast->left;
+            if(ast->down != NULL)
+                ast->down->prev = NULL;
+            ast->left = ast->up->left;
+            ast->up->prev->left = ast;
+            ast->up = ast->up->up;
+            parseTree temp = ast->down;
+            while(temp != NULL){
+                temp->up = ast;
+                temp = temp->left;
+            }
+            firstUp(ast->left);
         }
     }
     else{
         firstUp(ast->down);
         firstUp(ast->left);
     }
-}*/
+}
+
+void removeCondi(parseTree ast){
+    if (ast == NULL)
+        return;
+    int tok_value = ast->val;
+    // all terminals... so ast->down == NULL
+    if(/*tok_value == 54 ||*/ tok_value == 58 || /*tok_value == 66 || tok_value == 67 ||*/ tok_value == 69 || tok_value == 72 ||
+       tok_value == 73 || tok_value == 78 || tok_value == 92 || tok_value == 102){
+        if(ast->up->prev == NULL){
+            printf("inside null!\n");
+            ast->down = ast->left;
+            ast->left = ast->up->left;
+            if(ast->down != NULL)
+                ast->down->prev = NULL;
+            ast->up->up->down = ast;
+            parseTree temp = ast->down;
+            ast->up = ast->up->up;
+            while(temp != NULL){
+                temp->up = ast;
+                temp = temp->left;
+            }
+            removeCondi(ast->left);
+            removeCondi(ast->down);
+        }
+        else{
+            ast->down = ast->left;
+            if(ast->down != NULL)
+                ast->down->prev = NULL;
+            ast->left = ast->up->left;
+            ast->up->prev->left = ast;
+            ast->up = ast->up->up;
+            parseTree temp = ast->down;
+            while(temp != NULL){
+                temp->up = ast;
+                temp = temp->left;
+            }
+            removeCondi(ast->left);
+            removeCondi(ast->down);
+        }
+    }
+
+    else{
+            removeCondi(ast->down);
+            removeCondi(ast->left);
+        }
+
+}
