@@ -22,6 +22,7 @@ struct Node{                       // Node data structure
  lex lexeme;
  int line;
  parseTree down;
+ parseTree prev;
 };
 
 typedef struct cell cell;

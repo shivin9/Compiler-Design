@@ -94,9 +94,11 @@ int main(int argc, char* argv[]){
         dup2(back, 1);
         close(back);
     }
+    //printTree(headT);
     parseTree ast = createAst(headT);
     printTree(ast);
 
+    //free(ast);
     free(headT);
     free(ch);
     return 0;

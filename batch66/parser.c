@@ -185,7 +185,7 @@ void insert(parseTree temp, int rule, int gra[][10], lex lexem)
         // new node is definitely the child of temp
         temp1->up = temp;
         //if(!strcmp(terms[a[i]], lexem->token)){
-            temp1->lexeme = lexem;
+        temp1->lexeme = lexem;
         //}
 
         // else{
@@ -203,8 +203,10 @@ void insert(parseTree temp, int rule, int gra[][10], lex lexem)
         temp1->line = lexem->line;
 
         // insert at temp only
-        if(temp->down==NULL)
+        if(temp->down==NULL){
             temp->down = temp1;
+            temp->down->prev == NULL;
+        }
 
         // finding a child which has no down pointer by traversing through the list of children
         else
@@ -217,6 +219,7 @@ void insert(parseTree temp, int rule, int gra[][10], lex lexem)
             }
             // set the left child to temp1
             right->left = temp1;
+            right->left->prev = right;
         }
         i++;
     }
@@ -500,70 +503,118 @@ void printTree(parseTree head)
 parseTree createAst(parseTree pTree){
     parseTree ast;
     ast = pTree;
-    removePunc(ast, NULL);
-    printTree(ast);
-    pullUpSingle(ast, NULL);
+    //printTree(ast);
+    removePunc(ast);
+    pullUpSingle(ast);
+    // terminals now have children
+    //firstUp(ast);
+    //printTree(ast);
     return pTree;
 }
 
-void removePunc(parseTree ast, parseTree prev){
+void removePunc(parseTree ast){
     if(ast == NULL)
         return;
-    int tok_value = ast->val;
 
-    if (tok_value == 55 || tok_value == 56 || tok_value == 57 || tok_value == 61 || tok_value == 64 ||
-        tok_value == 65 || tok_value == 68 || tok_value == 71 || tok_value == 74 || tok_value == 75 ||
+    int tok_value = ast->val;
+    if (tok_value < 48 && ast->down == NULL){
+        printf("inside EPS rule\n");
+        if(ast->prev != NULL){
+            ast->prev->left = ast->left;
+            removePunc(ast->prev);
+            free(ast);
+        }
+        else{
+            ast->up->down = ast->down;
+            removePunc(ast->left);
+        }
+    }
+    else if
+       (tok_value == 55 || tok_value == 56 || tok_value == 57 || tok_value == 61 || tok_value == 64 ||
+        tok_value == 65 || tok_value == 68 || tok_value == 71 || tok_value == 75 || tok_value == 76 ||
         tok_value == 77 || tok_value == 79 || tok_value == 80 || tok_value == 81 || tok_value == 82 ||
         tok_value == 83 || tok_value == 84 || tok_value == 85 || tok_value == 91){
         // ast is the left most child
-        if(prev != NULL){
-            prev->left = ast->left;
+        if(ast->prev != NULL){
+            ast->prev->left = ast->left;
+            removePunc(ast->left);
             free(ast);
-            removePunc(ast->left, prev);
         }
         else{
             ast->up->down = ast->left;
-            ast->left->down = ast->down;
-            removePunc(ast->left, NULL);
+            //ast->left->down = ast->down;
+            removePunc(ast->left);
             free(ast);
         }
     }
     else{
-            removePunc(ast->down, NULL);
-            removePunc(ast->left, ast);
+            removePunc(ast->down);
+            removePunc(ast->left);
     }
 }
+
 // clean rules of type <stmt> ===> <assignmentStmt>
 void pullUpSingle(parseTree ast){
     if(ast == NULL)
         return;
     int tok_value = ast->val;
 
-    if (tok_value == 7  || tok_value == 19 || tok_value == 21 || tok_value == 27 || tok_value == 32 ||
-        tok_value == 37 || tok_value == 38 || tok_value == 39 || tok_value == 41 || tok_value == 42 ||
-        tok_value == 43 || tok_value == 44 || tok_value == 45 || tok_value == 46 || tok_value == 47){
+    if (tok_value == 7  || tok_value == 8  || tok_value == 9  || tok_value == 19 || tok_value == 21 || tok_value == 27 || tok_value == 32 || tok_value == 37 || tok_value == 38 || tok_value == 39 || tok_value == 41 || tok_value == 42 || tok_value == 43 || tok_value == 44 || tok_value == 45 || tok_value == 46 || tok_value == 47){
 
-        if(prev != NULL){
-            printf("not null in %s\n", terms[tok_value]);
-            prev->left = ast->down;
+        if(ast->prev == NULL){
+            ast->up->down = ast->down;
             ast->down->left = ast->left;
             ast->down->up = ast->up;
-            pullUpSingle(ast->left, ast);
+            pullUpSingle(ast->down);
+            //pullUpSingle(ast->left, ast);
             free(ast);
         }
         else{
-            printf("null in %s\n", terms[tok_value]);
-            printf("up = %s\n", terms[ast->up->val]);
-            ast->up->down = ast->down;
-            printf("down = %s\n", terms[ast->down->val]);
+            ast->prev->left = ast->down;
+            ast->down->left = ast->left;
             ast->down->up = ast->up;
-            //ast->down->left = ast->left;
-            pullUpSingle(ast->up->down, NULL);
+            //pullUpSingle(ast->down, NULL);
+            pullUpSingle(ast->left);
             free(ast);
+        }
+
+    }
+    else{
+            pullUpSingle(ast->down);
+            pullUpSingle(ast->left);
+    }
+}
+/*
+void firstUp(parseTree ast){
+    if (ast == NULL)
+        return;
+    int tok_value = ast->val;
+    // all terminals... so ast->down == NULL
+    if (tok_value == 51 || tok_value == 54 || tok_value == 58 || tok_value == 66 || tok_value == 67 ||
+        tok_value == 69 || tok_value == 72 || tok_value == 73 || tok_value == 74 || tok_value == 78 ||
+        tok_value == 92 || tok_value == 102){
+
+        // ast->up is the left most child
+        if(ast->up->down->val == ast->val){
+            ast->up->up->down = ast;
+            ast->down = ast->left;
+            ast->left = ast->up->left;
+            ast->up = ast->up->up;
+            // change the up pointer of all the leaves
+            parseTree temp = ast->down;
+            while(temp != NULL){
+                temp->up = ast;
+                temp = temp->left;
+            }
+            firstUp(ast->down);
+        }
+        // ast->up lies in the middle somewhere
+        else{
+            ast->
         }
     }
     else{
-            pullUpSingle(ast->down, NULL);
-            pullUpSingle(ast->left, ast);
+        firstUp(ast->down);
+        firstUp(ast->left);
     }
-}
+}*/

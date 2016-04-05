@@ -248,7 +248,7 @@
 {<optionalReturn>.ptr = NULL}
 
 <idList> ===> TK_ID <more_ids>
-{<idList>.ptr = <more_ids>.ptr}
+{<idList>.ptr = makeNode(makeLeaf("TK_ID", id.val), <more_ids>.ptr}
 
 <more_ids> ===> TK_COMMA <idList>
 {<more_ids>.ptr = <idList>.ptr}
