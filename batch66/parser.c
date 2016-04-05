@@ -505,7 +505,7 @@ parseTree createAst(parseTree pTree){
     ast = pTree;
     //printTree(ast);
     removePunc(ast);
-    pullUpSingle(ast);
+    //pullUpSingle(ast);
     // terminals now have children
     //firstUp(ast);
     //printTree(ast);
@@ -521,7 +521,7 @@ void removePunc(parseTree ast){
         printf("inside EPS rule\n");
         if(ast->prev != NULL){
             ast->prev->left = ast->left;
-            removePunc(ast->prev);
+            removePunc(ast->left);
             free(ast);
         }
         else{
@@ -535,6 +535,7 @@ void removePunc(parseTree ast){
         tok_value == 77 || tok_value == 79 || tok_value == 80 || tok_value == 81 || tok_value == 82 ||
         tok_value == 83 || tok_value == 84 || tok_value == 85 || tok_value == 91){
         // ast is the left most child
+        printf("removing terminal %s\n", terms[ast->val]);
         if(ast->prev != NULL){
             ast->prev->left = ast->left;
             removePunc(ast->left);
@@ -560,7 +561,7 @@ void pullUpSingle(parseTree ast){
     int tok_value = ast->val;
 
     if (tok_value == 7  || tok_value == 8  || tok_value == 9  || tok_value == 19 || tok_value == 21 || tok_value == 27 || tok_value == 32 || tok_value == 37 || tok_value == 38 || tok_value == 39 || tok_value == 41 || tok_value == 42 || tok_value == 43 || tok_value == 44 || tok_value == 45 || tok_value == 46 || tok_value == 47){
-
+        printf("removing %s\n", terms[ast->val]);
         if(ast->prev == NULL){
             ast->up->down = ast->down;
             ast->down->left = ast->left;
@@ -574,7 +575,7 @@ void pullUpSingle(parseTree ast){
             ast->down->left = ast->left;
             ast->down->up = ast->up;
             //pullUpSingle(ast->down, NULL);
-            pullUpSingle(ast->left);
+            pullUpSingle(ast->down);
             free(ast);
         }
 
