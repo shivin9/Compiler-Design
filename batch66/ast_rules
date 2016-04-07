@@ -75,7 +75,7 @@
 <declarations> ===> TK_EPS
 {<declarations>.ptr = NULL}
 
-<declaration> ===> TK_TYPE <dataType> TK_COLON TK_ID <global_or_not> TK_SEM
+<declaration> ===> TK_TYPE <dataType> TK_COLON TK_ID <global_or_not> TK_SEM *****
 {<declaration>.ptr = newNode([makeLeaf("TK_ID", id.entry), <dataType>.ptr, <global_or_not>.ptr])}
 
 <global_or_not> ===> TK_COLON TK_GLOBAL
@@ -105,8 +105,8 @@
 <stmt> ===> <funCallStmt>
 {<stmt>.ptr = <funCallStmt>.ptr}
 
-<assignmentStmt> ===> <singleOrRecId> TK_ASSIGNOP <arithmeticExpression> TK_SEM
-{<assignmentStmt>.ptr = newNode([makeLeaf("TK_ASSIGNOP", "="), <singleOrRecId>.ptr,
+<assignmentStmt> ===> <singleOrRecId> TK_ASSIGNOP <arithmeticExpression> TK_SEM ****
+{<assignmentStmt>.ptr = newNode([makeLeaf("TK_ASSIGNOP", "<---"), <singleOrRecId>.ptr,
 <arithmeticExpression>.ptr])}
 
 <singleOrRecId> ===> TK_ID <new_24>
@@ -196,7 +196,7 @@
 <lowPrecedenceOperators> ===> TK_MINUS
 {<highPrecedenceOperators>.ptr = makeLeaf("TK_MINUS", "-")}
 
-<booleanExpression> ===> TK_OP <booleanExpression> TK_CL <logicalOp> TK_OP <booleanExpression> TK_CL
+<booleanExpression> ===> TK_OP <booleanExpression> TK_CL <logicalOp> TK_OP <booleanExpression> TK_CL ****
 {<booleanExpression>.ptr = newNode([<logicalOp>.ptr, <booleanExpression>.ptr, <booleanExpression>.ptr])}
 
 <booleanExpression> ===> <var> <relationalOp> <var>
