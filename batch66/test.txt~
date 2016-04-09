@@ -9,7 +9,7 @@ output parameter list[real d3];
 end
 
 _sumM  input parameter list [real d2cc34]
-output parameter list[int d5];
+output parameter list[real d5];
 	d5 <--- d5 + 128;
 	read(c3bb);
 	return [d5];
