@@ -55,7 +55,7 @@
 {<typeDefinitions>.ptr = NULL)}
 
 <typeDefinition> ===> TK_RECORD TK_RECORDID <fieldDefinitions> TK_ENDRECORD TK_SEM
-{<typeDefinition>.ptr = newNode([makeLeaf("TK_RECORDID", recordId.entry), <fieldDefinition>.ptr])}
+{<typeDefinition>.ptr = newNode([makeLeaf("TK_RECORDID", recordId.entry), <fieldDefinitions>.ptr])}
 
 <fieldDefinitions> ===> <fieldDefinition> <fieldDefinition> <moreFields>
 {<fieldDefinitions>.ptr = newNode([<fieldDefinition>.ptr, <fieldDefinition>.ptr, <moreFields>.ptr])}
