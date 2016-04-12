@@ -4,7 +4,9 @@
     UPADHYAY GAURAV ARVIND - 2013A7PS030P
 */
 
-#include "parserDef.h"
+//#include "parserDef.h"
+#include "symData.h"
+
 #include <fcntl.h>
 int main(int argc, char* argv[]){
     if(argc == 1){
@@ -97,6 +99,9 @@ int main(int argc, char* argv[]){
     //printTree(headT);
     parseTree ast = createAst(headT);
     printTree(ast);
+
+    symLink stab = createSym();
+    //getSymtable(stab, ast);
 
     //free(ast);
     free(headT);

@@ -510,14 +510,19 @@ parseTree createAst(parseTree pTree){
     //printTree(ast);
     removePunc(ast, NULL);
     verifyPrev(ast, NULL);
-    pullUpSingle(ast, NULL);
-    verifyPrev(ast, NULL);
+    // pullUpSingle(ast, NULL);
     //fixFunId(ast);
     //verifyPrev(ast, NULL);
     //printTree(ast);
     firstUp(ast);
     verifyPrev(ast, NULL);
     removeID(ast);
+    verifyPrev(ast, NULL);
+    pullUpSingle(ast, NULL);
+    verifyPrev(ast, NULL);
+    collapseChains(ast);
+    verifyPrev(ast, NULL);
+    fixPara(ast);
     return ast;
 }
 
@@ -537,7 +542,6 @@ void removePunc(parseTree ast, parseTree prev){
 
     int tok_value = ast->val;
     if (tok_value < 48 && ast->down == NULL){
-        printf("inside EPS rule\n");
         if(prev != NULL){
             prev->left = ast->left;
             ast->left->prev = prev;
@@ -587,10 +591,17 @@ void pullUpSingle(parseTree ast, parseTree prev){
     if (tok_value == 7  || tok_value == 8  || tok_value == 9  || tok_value == 19 || tok_value == 21 || tok_value == 24 ||
         tok_value == 27 || tok_value == 32 || tok_value == 37 || tok_value == 38 || tok_value == 39 || tok_value == 41 ||
         tok_value == 42 || tok_value == 43 || tok_value == 44 || tok_value == 45 || tok_value == 46 || tok_value == 47){
+
+        //if(ast->prev == NULL && ast->left == NULL){
         if(prev == NULL){
-            ast->up->down = ast->down;
-            ast->down->left = ast->left;
-            ast->down->up = ast->up;
+            if(ast->up != NULL)
+                ast->up->down = ast->down;
+
+            if(ast->down != NULL){
+                ast->down->left = ast->left;
+                ast->down->up = ast->up;
+            }
+
             if(ast->left != NULL)
                 ast->left->prev = prev;
             pullUpSingle(ast->down, NULL);
@@ -599,8 +610,12 @@ void pullUpSingle(parseTree ast, parseTree prev){
         }
         else{
             prev->left = ast->down;
-            ast->down->left = ast->left;
-            ast->down->up = ast->up;
+
+            if(ast->down != NULL){
+                ast->down->left = ast->left;
+                ast->down->up = ast->up;
+            }
+
             if(ast->left != NULL)
                 ast->left->prev = prev;
             //pullUpSingle(ast->down, NULL);
@@ -626,6 +641,7 @@ void firstUp(parseTree ast){
     int tok_value = ast->val;
     // all terminals... so ast->down == NULL
     // for rule <singleOrRecId> ===> TK_ID <new_24> involving TK_ID
+
     if ((tok_value == 51 && (ast->up->val == 23 || ast->up->val == 46)) || /*tok_value == 54 || tok_value == 58 ||*/
         (tok_value == 66 && ast->down == NULL) || (tok_value == 54 && ast->up->val == 3) || tok_value == 62 ||
         (tok_value == 67 && ast->down == NULL) || tok_value == 69 || (tok_value == 72 && ast->up->val == 31) ||
@@ -667,8 +683,8 @@ void firstUp(parseTree ast){
         }
         // ast->up lies somewhere in between
         else{
-            printf("up in between ast = %s\n", terms[ast->up->val]);
-            printf("prev in between ast = %s\n", terms[ast->up->prev->val]);
+            // printf("up in between ast = %s\n", terms[ast->up->val]);
+            // printf("prev in between ast = %s\n", terms[ast->up->prev->val]);
 
             ast->down = ast->left;
             if(ast->down != NULL)
@@ -698,52 +714,6 @@ void firstUp(parseTree ast){
     }
 }
 
-// void removeCondi(parseTree ast){
-//     if (ast == NULL)
-//         return;
-//     int tok_value = ast->val;
-//     // all terminals... so ast->down == NULL
-//     if(/*tok_value == 54 ||*/ tok_value == 58 || /*tok_value == 66 || tok_value == 67 ||*/ tok_value == 69 || tok_value == 72 ||
-//        tok_value == 73 || tok_value == 78 || tok_value == 92 || tok_value == 102){
-//         printf("ast = %s\n", terms[ast->val]);
-//         if(ast->up->prev == NULL){
-//             ast->down = ast->left;
-//             ast->left = ast->up->left;
-//             if(ast->down != NULL)
-//                 ast->down->prev = NULL;
-//             ast->up->up->down = ast;
-//             parseTree temp = ast->down;
-//             ast->up = ast->up->up;
-//             while(temp != NULL){
-//                 temp->up = ast;
-//                 temp = temp->left;
-//             }
-//             removeCondi(ast->left);
-//             removeCondi(ast->down);
-//         }
-//         else{
-//             ast->down = ast->left;
-//             if(ast->down != NULL)
-//                 ast->down->prev = NULL;
-//             ast->left = ast->up->left;
-//             ast->up->prev->left = ast;
-//             ast->up = ast->up->up;
-//             parseTree temp = ast->down;
-//             while(temp != NULL){
-//                 temp->up = ast;
-//                 temp = temp->left;
-//             }
-//             removeCondi(ast->left);
-//             removeCondi(ast->down);
-//         }
-//     }
-
-//     else{
-//             removeCondi(ast->down);
-//             removeCondi(ast->left);
-//         }
-// }
-
 /*
 rules of type :-
 <booleanExpression> ===> TK_OP <booleanExpression> TK_CL <logicalOp> TK_OP <booleanExpression> TK_CL ****
@@ -758,11 +728,9 @@ void removeID(parseTree ast){
         return;
     int tok_value = ast->val;
     // all terminals... so ast->down == NULL
-    if((tok_value == 51 && (ast->up->val == 6 || ast->up->val == 18)) /*|| tok_value == 58 || /*tok_value == 66 ||
-        tok_value == 67 || tok_value == 69 || tok_value == 72 || tok_value == 73 || tok_value == 78 ||
-        tok_value == 86 || tok_value == 48*/){
+    if((tok_value == 51 && (ast->up->val == 6 || ast->up->val == 18)) || tok_value == 58 || /*tok_value == 66 ||
+        tok_value == 67 ||*/ tok_value == 69 || tok_value == 48){
 
-        printf("ast = %s\n", terms[ast->val]);
         // here ast->prev is never NULL, 46 because of idList rule, an  26 for funcallstmt
         if(ast->up->prev == NULL){
             /*printf("up = %s, right = %s\n", terms[ast->up->val], terms[ast->left->val]);
@@ -814,8 +782,6 @@ void removeID(parseTree ast){
 
         else{
             // removing TK_ID from the middle
-            printf("inside tok_value else\n");
-
             if(ast->prev != NULL)
                 ast->prev->left = ast->left;
 
@@ -864,70 +830,91 @@ void removeID(parseTree ast){
     }
 }
 
-void fixFunId(parseTree ast){
+void collapseChains(parseTree ast){
+    if (ast == NULL)
+        return;
+
+    int tok_val = ast->val;
+
+    if(ast->prev != NULL && ast->left== NULL && (tok_val== 2 || tok_val == 20 || tok_val == 10 || tok_val == 17)){
+        //printf("collapsing %s\n", terms[ast->val]);
+
+        ast->prev->left = ast->down;
+        ast->down->prev = ast->prev;
+
+        if(ast->up != NULL){
+            parseTree temp = ast->down;
+            while(temp != NULL){
+                temp->up = ast->up;
+                temp = temp->left;
+            }
+        }
+
+        collapseChains(ast->left);
+        collapseChains(ast->down);
+        free(ast);
+    }
+
+    else{
+        collapseChains(ast->down);
+        collapseChains(ast->left);
+    }
+
+}
+
+// void fixArith(parseTree ast){
+//     if (ast == NULL)
+//         return;
+//     int tok_value = ast->val;
+
+//     if(){
+
+//     }
+
+//     else{
+//         fixArith(ast->down);
+//         fixArith(ast->left);
+//     }
+// }
+
+void fixPara(parseTree ast){
     if (ast == NULL)
         return;
     int tok_value = ast->val;
+    if(tok_value == 6){
+        printf("ast = %s\n", terms[ast->val]);
 
-    if((tok_value == 54 && ast->up->val == 3) || tok_value == 62){
-        if(ast->up->prev == NULL && ast->up->val != 25){
-
-            printf("ast = %s\n", terms[ast->val]);
-            printf("ast->up->up = %s\n", terms[ast->up->up->val]);
-            ast->up->up->down = ast;
-            ast->down = ast->left;
-            printf("ast->down = %s\n", terms[ast->down->val]);
-
-            if(ast->up->left != NULL)
-                ast->up->left->prev = ast;
-
-            parseTree pleft = ast->left;
-            while(pleft != NULL){
-                pleft->up = ast;
-                pleft = pleft->left;
-            }
-
-            printf("ast->left = %s\n", terms[ast->left->val]);
-
-            ast->left->prev = ast;
-            parseTree tempUp = ast->up;
-            free(ast->up);
-            ast->up = tempUp;
-            fixFunId(ast->left);
+        if(ast->up->up->val == 66){
+            ast->prev->up->left = ast;
+            ast->prev->left = NULL;
+            ast->prev = ast->prev->up;
+            ast->up = ast->up->up;
         }
-        else if (ast->up->prev != NULL && ast->up->val != 25){
-            printf("null ast in else = %s\n", terms[ast->val]);
-            printf("null ast->up in else = %s\n", terms[ast->up->val]);
 
-            // fix the pointers of ast's new neighbours
-            ast->up->prev->left = ast;
-            if(ast->up->left != NULL)
-                ast->up->left->prev = ast;
-            // fix ast's old neighbours
-            if(ast->prev != NULL)
-                ast->prev->left = ast->left;
+        parseTree temp = ast->down->left->left;
+        ast->prev->left = ast->down->left;
+        printf("ast->prev->left = %s\n", terms[ast->prev->left->val]);
 
-            parseTree pleft = ast->left;
-            while(pleft != NULL){
-                pleft->up = ast;
-                pleft = pleft->left;
-            }
+        ast->down->left->prev = ast->prev;
+        printf("ast->down->left->prev = %s\n", terms[ast->down->left->prev->val]);
+        ast->down->up = ast->down->left;
+        printf("ast->down->up = %s\n", terms[ast->down->up->val]);
+        ast->down->left->up = ast->up;
+        ast->down->left->down = ast->down;
+        printf("ast->down->left->down = %s\n", terms[ast->down->left->down->val]);
 
-            if(ast->left != NULL)
-                ast->left->prev = ast->prev;
-            // fix ast
-            ast->down = ast->left;
-            ast->left = ast->up->left;
-            ast->prev = ast->up->prev;
+        if(ast->down->left->left != NULL)
+            ast->down->left->left->up = ast->up;
+        ast->down->left = NULL;
 
-            parseTree tempUp = ast->up;
-            free(ast->up);
-            ast->up = tempUp;
-            fixFunId(ast->left);
-        }
+        ast->down = NULL;
+        ast->left = NULL;
+        ast->prev = NULL;
+        free(ast);
+        fixPara(temp);
     }
     else{
-        fixFunId(ast->down);
-        fixFunId(ast->left);
+            fixPara(ast->down);
+            fixPara(ast->left);
     }
 }
