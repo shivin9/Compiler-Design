@@ -21,7 +21,7 @@ _main
 	type int :b3:global;
 	type real :c4bd56;	
 	b3 <--- 7;
-	[c4bd56]<--- call _sumN with parameters [b3];
+	[c4bd56]<--- call _sumN with parameters [b3, b5, c3];
 	write(c4bd56);
 	return;
 end

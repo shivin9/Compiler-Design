@@ -18,6 +18,55 @@ nodeLink getNode(){
     return new;
 }
 
+void printTreeNode(parseTree head){
+    char* up = (char*) malloc(30*sizeof(char));
+    char* prev = (char*) malloc(30*sizeof(char));
+    char* lexcurrnode = (char*) malloc(30*sizeof(char));
+    char* numval = (char*) malloc(30*sizeof(char));
+    char* isleaf = (char*) malloc(30*sizeof(char));
+    char* symbol = (char*) malloc(30*sizeof(char));
+    char* tok = (char*) malloc(30*sizeof(char));
+
+    strcpy(tok, terms[head->val]);
+    if(head->up != NULL)
+        strcpy(up, terms[head->up->val]);
+    else
+        strcpy(up, "root");
+
+    if(head->val >= 48){
+        strcpy(lexcurrnode, head->lexeme->value);
+        //printf("%d", head->val);
+        strcpy(isleaf, "yes");
+        strcpy(symbol, "-----");
+    }
+    else{
+        strcpy(lexcurrnode, "-----");
+        strcpy(isleaf, "no");
+        strcpy(symbol, terms[head->val]);
+    }
+
+    if(head->val == 105 || head->val == 106)
+        strcpy(numval, terms[head->val]);
+    else
+        strcpy(numval, "-----");
+
+    if(head->prev == NULL)
+        strcpy(prev, "NULL");
+    else
+        strcpy(prev, terms[head->prev->val]);
+
+    //int line = head->lexeme->line;
+    //printf("copied everything... line= %d\n", line);
+
+    printf("%s, %d, %s, %s, %s, %s, %s, p = %s\n",lexcurrnode, head->line, tok, numval, up, isleaf, symbol, prev);
+    free(tok);
+    free(symbol);
+    free(lexcurrnode);
+    free(numval);
+    free(isleaf);
+    free(up);
+}
+
 tableLink initializeTable(){
     tableLink new = (tableLink) malloc(sizeof(table));
     new -> size = 0;
@@ -158,8 +207,7 @@ parseTree search(parseTree start, int a)
         return NULL;
 }
 
-void insert(parseTree temp, int rule, int gra[][10], lex lexem)
-{
+void insert(parseTree temp, int rule, int gra[][10], lex lexem){
     int *a = gra[rule], i = 1;
     parseTree temp1,temp2,right;
 
@@ -184,8 +232,9 @@ void insert(parseTree temp, int rule, int gra[][10], lex lexem)
 
         // new node is definitely the child of temp
         temp1->up = temp;
-        //if(!strcmp(terms[a[i]], lexem->token)){
         temp1->lexeme = lexem;
+
+        //if(!strcmp(terms[a[i]], lexem->token)){
         //}
 
         // else{
@@ -231,6 +280,28 @@ void printStack(int a[],int top)
         printf("%s\n",terms[a[i]]);
     printf("***************\n");
 
+}
+
+int glob = 0;
+void fixTree(parseTree node, lexChain ch){
+    if(node == NULL)
+        return;
+    if(node->val >= 48 && node->val != 110){
+        lex new = getNextTok(ch, glob);
+        if(new == NULL)
+            return;
+        while(!strcmp(new->token,"TK_COMMENT")){
+            glob++;
+            new = getNextTok(ch, glob);
+        }
+        node->lexeme = new;
+        glob++;
+        fixTree(node->left, ch);
+    }
+    else{
+        fixTree(node->down, ch);
+        fixTree(node->left, ch);
+    }
 }
 
 //-------------------------------------------MAIN FUNCTIONS--------------------------------------
@@ -339,7 +410,8 @@ parseTree parseInputSourceCode(parseTree head, FILE *fp, lexChain ch)
             top=push(stack,top,rule,gra);
         }
 
-    }while(top != 111);
+    } while(top != 111);
+
     if(flag)
         printf("CODE IS SYNTACTICALLY INCORRECTLY\n");
 
@@ -523,6 +595,8 @@ parseTree createAst(parseTree pTree){
     collapseChains(ast);
     verifyPrev(ast, NULL);
     fixPara(ast);
+    verifyPrev(ast, NULL);
+    //printTree(ast);
     return ast;
 }
 
@@ -558,7 +632,7 @@ void removePunc(parseTree ast, parseTree prev){
        (tok_value == 55 || tok_value == 56 || tok_value == 57 || tok_value == 61 || tok_value == 64 ||
         tok_value == 65 || tok_value == 68 || tok_value == 71 || tok_value == 74 || tok_value == 75 ||
         tok_value == 76 || tok_value == 77 || tok_value == 79 || tok_value == 80 || tok_value == 81 ||
-        tok_value == 82 || tok_value == 83 || tok_value == 84 || tok_value == 85 || tok_value == 91){
+        tok_value == 82 || tok_value == 83 || tok_value == 84 || tok_value == 85 || tok_value == 91 || tok_value == 110){
         // ast is the left most child
         if(prev != NULL){
             prev->left = ast->left;
@@ -836,11 +910,13 @@ void collapseChains(parseTree ast){
 
     int tok_val = ast->val;
 
-    if(ast->prev != NULL && ast->left== NULL && (tok_val== 2 || tok_val == 20 || tok_val == 10 || tok_val == 17)){
+    if(ast->prev != NULL && ast->left== NULL && (tok_val== 2 || tok_val == 20 || tok_val == 10 || tok_val == 17 ||
+       tok_val == 46 || tok_val == 47)){
         //printf("collapsing %s\n", terms[ast->val]);
 
         ast->prev->left = ast->down;
-        ast->down->prev = ast->prev;
+        if(ast->down != NULL)
+            ast->down->prev = ast->prev;
 
         if(ast->up != NULL){
             parseTree temp = ast->down;
@@ -862,27 +938,12 @@ void collapseChains(parseTree ast){
 
 }
 
-// void fixArith(parseTree ast){
-//     if (ast == NULL)
-//         return;
-//     int tok_value = ast->val;
-
-//     if(){
-
-//     }
-
-//     else{
-//         fixArith(ast->down);
-//         fixArith(ast->left);
-//     }
-// }
-
 void fixPara(parseTree ast){
     if (ast == NULL)
         return;
     int tok_value = ast->val;
     if(tok_value == 6){
-        printf("ast = %s\n", terms[ast->val]);
+        //printf("ast = %s\n", terms[ast->val]);
 
         if(ast->up->up->val == 66){
             ast->prev->up->left = ast;
@@ -893,15 +954,15 @@ void fixPara(parseTree ast){
 
         parseTree temp = ast->down->left->left;
         ast->prev->left = ast->down->left;
-        printf("ast->prev->left = %s\n", terms[ast->prev->left->val]);
+        //printf("ast->prev->left = %s\n", terms[ast->prev->left->val]);
 
         ast->down->left->prev = ast->prev;
-        printf("ast->down->left->prev = %s\n", terms[ast->down->left->prev->val]);
+        //printf("ast->down->left->prev = %s\n", terms[ast->down->left->prev->val]);
         ast->down->up = ast->down->left;
-        printf("ast->down->up = %s\n", terms[ast->down->up->val]);
+        //printf("ast->down->up = %s\n", terms[ast->down->up->val]);
         ast->down->left->up = ast->up;
         ast->down->left->down = ast->down;
-        printf("ast->down->left->down = %s\n", terms[ast->down->left->down->val]);
+        // printf("ast->down->left->down = %s\n", terms[ast->down->left->down->val]);
 
         if(ast->down->left->left != NULL)
             ast->down->left->left->up = ast->up;

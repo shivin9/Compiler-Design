@@ -19,6 +19,7 @@ struct Node{                       // Node data structure
  int val;
  int visit;      // whether Node has been visited earlier or not
  parseTree left;
+ // lexeme is bad... use val
  lex lexeme;
  int line;
  parseTree down;

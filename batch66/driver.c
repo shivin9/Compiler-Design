@@ -78,8 +78,10 @@ int main(int argc, char* argv[]){
         exit(0);
     }
 
-    if(parse)
+    if(parse){
         parseInputSourceCode(headT, fp, ch);
+        fixTree(headT, ch);
+    }
 
     if(tree){
         int back, new;
@@ -96,7 +98,6 @@ int main(int argc, char* argv[]){
         dup2(back, 1);
         close(back);
     }
-    //printTree(headT);
     parseTree ast = createAst(headT);
     printTree(ast);
 

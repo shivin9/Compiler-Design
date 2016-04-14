@@ -3,8 +3,8 @@
 dLink createData()
 {
     dLink tab=(dLink)malloc(sizeof(dNode));
-    tab->lexName=(char*) malloc(30*sizeof(char));
-    tab->lexType=(char*) malloc(30*sizeof(char));
+    tab->lexName=getNewlex();
+    tab->lexType=getNewlex();
     tab->rec=0;
     tab->offset=0;
     tab->down=NULL;
@@ -27,11 +27,9 @@ funcLink createFunc()
 //  creating symbol table
 symLink createSym()
 {
-    printf("in create sym\n");
     int i;
     symLink tab=(symLink)malloc(sizeof(symBox));
     for(i=0;i<10;i++){
-        printf("in loop\n");
         tab->func[i]=createFunc();
     }
     tab->glo=NULL;
@@ -42,6 +40,8 @@ symLink createSym()
 
 void cpyLex(lex d,lex l)
 {
+    if(d == NULL)
+        printf("d in cpylex is null\n");
     strcpy(d->token,l->token);
     strcpy(d->value,l->value);
     d->line=l->line;
@@ -56,22 +56,24 @@ void cpyLex(lex d,lex l)
 // }
 
 // linked list of int/real
-void getDec(symLink tab,parseTree declarations,int nFunc)
+void getDec(symLink tab, parseTree declarations,int nFunc)
 {
-    parseTree dec=declarations;
-    while(dec!=NULL)
-    {
-        dLink d=(dLink)malloc(sizeof(dNode));
+    parseTree dec = declarations;
+    while(dec != NULL){
+        printf("inside getDec\n");
+        dLink d = createData();
+
         cpyLex(d->lexName,dec->lexeme);
         cpyLex(d->lexType,dec->down->lexeme);
+
         if((dec->down->left)!=NULL)
         {
-            dLink g=tab->glo;
-            if(tab->glo==NULL)
+            dLink g = tab->glo;
+            if(tab->glo == NULL)
                 tab->glo=d;
             else
             {
-                while(g->next!=NULL)
+                while(g->next != NULL)
                     g=g->next;
                 g->next=d;
             }
@@ -87,8 +89,49 @@ void getDec(symLink tab,parseTree declarations,int nFunc)
             }
         }
         dec=dec->left;
-
     }
+}
+
+void printDNode(dLink dlk){
+    if(dlk == NULL)
+        return;
+    else{
+        printf("lexName: ");
+        printLex(dlk->lexName);
+        printf("\nlexType: ");
+        printLex(dlk->lexType);
+
+        printf("\ndlk->down: ");
+        printDNode(dlk->down);
+
+        printf("\ndlk->next: ");
+        printDNode(dlk->next);
+    }
+}
+
+void printFunBox(funcLink flink){
+    if(flink == NULL)
+        return;
+    else{
+        printf("\nlex: ");
+        printLex(flink->lexeme);
+        printf("\ninp: ");
+        printDNode(flink->inp);
+        printf("\nout: ");
+        printDNode(flink->out);
+        printf("\nvar: ");
+        printDNode(flink->var);
+    }
+}
+
+void printSymTable(symLink tab){
+    printf("nFuncs = %d\n", tab->nFunc);
+    int i = 0;
+    for(i; i < tab->nFunc; i++){
+        printFunBox(tab->func[i]);
+    }
+    printf("glo = \n");
+    printDNode(tab->glo);
 }
 
 // returns the final dlinks under stmts
@@ -99,44 +142,72 @@ void getStmt(symLink tab,parseTree stmts,int nFunc){
 }
 
 // filling function in symbol table
-void insertFunc(symLink tab,parseTree funId)
+void insertFunc(symLink tab, parseTree ast)
 {
     int nFunc = tab->nFunc;
-    tab->func[nFunc]->lexeme=(lex)malloc(sizeof(tokenInfo));
-    tab->func[nFunc]->lexeme->token = (char*) malloc(30*sizeof(char));
-    tab->func[nFunc]->lexeme->value = (char*) malloc(30*sizeof(char));
-    strcpy(tab->func[nFunc]->lexeme->token, funId->lexeme->token);
-    strcpy(tab->func[nFunc]->lexeme->value, funId->lexeme->value);
-    tab->func[nFunc]->lexeme->line = funId->lexeme->line;
 
-    printf("inside insertFunc\n");
-    parseTree tempIn,tempOut,tempVar;
-    tempIn=funId->down;
-    tempOut=tempIn->left;
-    // tempVar = stmts
-    tempVar=tempOut->left;
+    // initialize lexeme of func
+    tab->func[nFunc]->lexeme = getNewlex();
+
+    parseTree tempIn,tempOut,tempVar, funId;
+
+    funId = ast->down->down;
+
+    cpyLex(tab->func[nFunc]->lexeme, funId->lexeme);
+
+    tempIn = funId->down->down;
+    tempOut = funId->down->left->down;
+    tempVar = funId->down->left->left;
+
+
+    printTreeNode(tempIn);
+
+    // filling inputs
     while(tempIn!=NULL)
     {
-        dLink d=(dLink)malloc(sizeof(dNode));
-        cpyLex(d->lexName,tempIn->lexeme);
-        cpyLex(d->lexType,tempIn->down->lexeme);
-        if(tab->func[nFunc]->inp==NULL)
-            tab->func[nFunc]->inp=d;
+        dLink dinp = createData();
+
+        cpyLex(dinp->lexName, tempIn->lexeme);
+        printf("printing tempin\n");
+        printTreeNode(tempIn);
+        cpyLex(dinp->lexType, tempIn->down->lexeme);
+        printTreeNode(tempIn->down);
+
+        printf("printing tempin->down\n");
+        printLex(tempIn->down->lexeme);
+
+
+        if(tab->func[nFunc]->inp == NULL){
+            tab->func[nFunc]->inp = dinp;
+            //printf("inserting...\n");
+            //printDNode(dinp);
+        }
+
         else{
-            while(tab->func[nFunc]->inp->next!=NULL)
-                tab->func[nFunc]->inp=tab->func[nFunc]->inp->next;
-            tab->func[nFunc]->inp->next=d;
+            while(tab->func[nFunc]->inp->next != NULL)
+                tab->func[nFunc]->inp = tab->func[nFunc]->inp->next;
+
+            //printf("inserting...\n");
+            //printDNode(dinp);
+
+            tab->func[nFunc]->inp->next = dinp;
         }
         tempIn=tempIn->left;
-
     }
+
+    printSymTable(tab);
+
+
     while(tempOut!=NULL)
     {
-        dLink outVars=(dLink)malloc(sizeof(dNode));
+        dLink outVars = createData();
+
         cpyLex(outVars->lexName,tempOut->lexeme);
         cpyLex(outVars->lexType,tempOut->down->lexeme);
+
         if(tab->func[nFunc]->out==NULL)
             tab->func[nFunc]->out=outVars;
+
         else
         {
             while(tab->func[nFunc]->out->next!=NULL)
@@ -144,9 +215,8 @@ void insertFunc(symLink tab,parseTree funId)
             tab->func[nFunc]->out->next=outVars;
         }
         tempOut=tempOut->left;
-
     }
-
+    //printSymTable(tab);
     getStmt(tab,tempVar,nFunc);
 }
 
@@ -155,9 +225,12 @@ void getSymtable(symLink s, parseTree ast)
     printf("inside get table!\n");
     parseTree temp = ast;
     temp = temp->down->down;
+    // for functions
     while(temp != NULL){
-        insertFunc(s, temp);
+        insertFunc(s, ast);
+        s->nFunc++;
         temp = temp->left;
     }
-    insertFunc(s, ast->down->left);
+    // for main function
+    //insertFunc(s, ast->down->left);
 }

@@ -8,6 +8,8 @@
 static int lineNo=1;
 lex getNewlex(){
     lex new = (lex) malloc(sizeof(tokenInfo));
+    new->token = (char*) malloc(30*sizeof(char));
+    new->value = (char*) malloc(30*sizeof(char));
     return new;
 }
 
@@ -20,8 +22,6 @@ void clear(char* str){
 link getNewNode(){
     link new = (link) malloc(sizeof(node));
     new->lex = getNewlex();
-    new->lex->token = (char*) malloc(30*sizeof(char));
-    new->lex->value = (char*) malloc(30*sizeof(char));
     int i;
     for(i = 0; i < 30; i++){
          new->lex->value[i] = '\0';
@@ -74,6 +74,18 @@ lex getNextToken(FILE *fp, int curr, lexChain chain){
     return first -> lex;
 }
 
+lex getNextTok(lexChain chain, int curr){
+    int i;
+    lex ret;
+    link first = chain->first;
+    for(i = 0; i < curr; i++){
+        first = first->next;
+    }
+    if (first == NULL)
+        return NULL;
+    return first -> lex;
+}
+
 void addNode(lexChain chain, link new){
     link first = chain->first;
     if(first == NULL){
@@ -94,6 +106,10 @@ int newLine(char* B, int curr){
     curr++;
     lineNo++;
     return curr;
+}
+
+void printLex(lex l){
+    printf("token = %s, value = %s, line = %d\n", l->token, l->value, l->line);
 }
 
 void printNode(link l){

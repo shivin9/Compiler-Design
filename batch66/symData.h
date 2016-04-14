@@ -14,19 +14,16 @@ typedef struct symBox symBox;
 typedef struct symBox *symLink;
 
 // information about types
-
-struct dNode
-{
+struct dNode{
     lex lexName;
     lex lexType;
-    int rec;
+    int rec; // to tell whether it is a constructed or primitive datatype
     int offset;
     dLink down;
     dLink next;
 };
 
 // information about function. Each function is directly pointed from symbol table
-
 struct funcBox
 {
     lex lexeme;
@@ -35,9 +32,7 @@ struct funcBox
     dLink var;
 };
 
-
 // symbol table data structure
-
 struct symBox
 {
     funcLink func[10];
