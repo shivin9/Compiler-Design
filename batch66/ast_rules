@@ -186,7 +186,7 @@
 
 <highPrecedenceOperators> ===> TK_MUL
 {<highPrecedenceOperators>.ptr = makeLeaf("TK_MUL", "*")}
-
+5
 <highPrecedenceOperators> ===> TK_DIV
 {<highPrecedenceOperators>.ptr = makeLeaf("TK_DIV", "+")}
 

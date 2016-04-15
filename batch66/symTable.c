@@ -56,36 +56,41 @@ void cpyLex(lex d,lex l)
 // }
 
 // linked list of int/real
-void getDec(symLink tab, parseTree declarations,int nFunc)
+void getDec(symLink tab, parseTree declarations, int nFunc)
 {
-    parseTree dec = declarations;
+    parseTree dec = declarations->down;
     while(dec != NULL){
-        printf("inside getDec\n");
-        dLink d = createData();
+        dLink dvar = createData();
+        cpyLex(dvar->lexName,dec->lexeme);
 
-        cpyLex(d->lexName,dec->lexeme);
-        cpyLex(d->lexType,dec->down->lexeme);
+        if(dec->down != NULL)
+            cpyLex(dvar->lexType,dec->down->lexeme);
 
-        if((dec->down->left)!=NULL)
+        if((dec->down->left) != NULL)
         {
             dLink g = tab->glo;
+            printf("\ninserting in global: ");
+            printTreeNode(dec->down->left);
             if(tab->glo == NULL)
-                tab->glo=d;
+                tab->glo=dvar;
             else
             {
                 while(g->next != NULL)
                     g=g->next;
-                g->next=d;
+                g->next=dvar;
             }
         }
         else
         {
             if(tab->func[nFunc]->var==NULL)
-                tab->func[nFunc]->var=d;
+                tab->func[nFunc]->var=dvar;
             else{
-                while(tab->func[nFunc]->var->next!=NULL)
-                    tab->func[nFunc]->var=tab->func[nFunc]->var->next;
-                tab->func[nFunc]->var->next=d;
+                dLink temp = tab->func[nFunc]->var;
+
+                while(temp->next != NULL)
+                    temp = temp->next;
+
+                temp->next = dvar;
             }
         }
         dec=dec->left;
@@ -113,7 +118,7 @@ void printFunBox(funcLink flink){
     if(flink == NULL)
         return;
     else{
-        printf("\nlex: ");
+        printf("\nFunction Details: ");
         printLex(flink->lexeme);
         printf("\ninp: ");
         printDNode(flink->inp);
@@ -121,13 +126,14 @@ void printFunBox(funcLink flink){
         printDNode(flink->out);
         printf("\nvar: ");
         printDNode(flink->var);
+        printf("\n");
     }
 }
 
 void printSymTable(symLink tab){
     printf("nFuncs = %d\n", tab->nFunc);
-    int i = 0;
-    for(i; i < tab->nFunc; i++){
+    int i;
+    for(i = 0; i < tab->nFunc + 1; i++){
         printFunBox(tab->func[i]);
     }
     printf("glo = \n");
@@ -138,7 +144,6 @@ void printSymTable(symLink tab){
 void getStmt(symLink tab,parseTree stmts,int nFunc){
     //getTypeDef(tab,stmts->down,nFunc);
     getDec(tab,stmts->down->left,nFunc);
-
 }
 
 // filling function in symbol table
@@ -150,17 +155,21 @@ void insertFunc(symLink tab, parseTree ast)
     tab->func[nFunc]->lexeme = getNewlex();
 
     parseTree tempIn,tempOut,tempVar, funId;
-
-    funId = ast->down->down;
+    funId = ast;
 
     cpyLex(tab->func[nFunc]->lexeme, funId->lexeme);
 
-    tempIn = funId->down->down;
-    tempOut = funId->down->left->down;
-    tempVar = funId->down->left->left;
-
-
-    printTreeNode(tempIn);
+    // special initialization for TK_MAIN
+    if(funId->val != 62){
+        tempIn = funId->down->down;
+        tempOut = funId->down->left->down;
+        tempVar = funId->down->left->left;
+    }
+    else{
+        tempIn = NULL;
+        tempOut = NULL;
+        tempVar = funId->down;
+    }
 
     // filling inputs
     while(tempIn!=NULL)
@@ -168,15 +177,15 @@ void insertFunc(symLink tab, parseTree ast)
         dLink dinp = createData();
 
         cpyLex(dinp->lexName, tempIn->lexeme);
-        printf("printing tempin\n");
-        printTreeNode(tempIn);
+//        printf("printing tempin\n");
+//        printTreeNode(tempIn);
         cpyLex(dinp->lexType, tempIn->down->lexeme);
-        printTreeNode(tempIn->down);
 
-        printf("printing tempin->down\n");
-        printLex(tempIn->down->lexeme);
+        //printf("printing tempin->down\n");
+  //      printTreeNode(tempIn->down);
+        //printLex(tempIn->down->lexeme);
 
-
+        // handling the first case separately
         if(tab->func[nFunc]->inp == NULL){
             tab->func[nFunc]->inp = dinp;
             //printf("inserting...\n");
@@ -184,20 +193,18 @@ void insertFunc(symLink tab, parseTree ast)
         }
 
         else{
-            while(tab->func[nFunc]->inp->next != NULL)
-                tab->func[nFunc]->inp = tab->func[nFunc]->inp->next;
+            dLink temp = tab->func[nFunc]->inp;
 
-            //printf("inserting...\n");
-            //printDNode(dinp);
+            while(temp->next != NULL)
+                temp = temp->next;
 
-            tab->func[nFunc]->inp->next = dinp;
+            temp->next = dinp;
         }
         tempIn=tempIn->left;
     }
 
-    printSymTable(tab);
-
-
+    //printSymTable(tab);
+    //printf("**********************************\nFunc");
     while(tempOut!=NULL)
     {
         dLink outVars = createData();
@@ -208,29 +215,60 @@ void insertFunc(symLink tab, parseTree ast)
         if(tab->func[nFunc]->out==NULL)
             tab->func[nFunc]->out=outVars;
 
-        else
-        {
-            while(tab->func[nFunc]->out->next!=NULL)
-                tab->func[nFunc]->out=tab->func[nFunc]->out->next;
-            tab->func[nFunc]->out->next=outVars;
+        else{
+            dLink temp = tab->func[nFunc]->out;
+
+            while(temp->next != NULL)
+                temp = temp->next;
+
+            temp->next = outVars;
         }
         tempOut=tempOut->left;
     }
-    //printSymTable(tab);
+    //("**********************************\n");
+    //printSymTafunId->down->left->downble(tab);
     getStmt(tab,tempVar,nFunc);
 }
 
 void getSymtable(symLink s, parseTree ast)
 {
-    printf("inside get table!\n");
     parseTree temp = ast;
     temp = temp->down->down;
     // for functions
     while(temp != NULL){
-        insertFunc(s, ast);
+        insertFunc(s, temp);
         s->nFunc++;
         temp = temp->left;
     }
-    // for main function
-    //insertFunc(s, ast->down->left);
+    //printSymTable(s);
+    // inserting main function
+    insertFunc(s, ast->down->left);
+}
+
+// to search a variable in the symbol table
+int searchTable(symLink tab, char* name, char* type, char* func){
+    int i = 0;
+    // find the corresponding entry for that function
+    while(strcmp(tab->func[i]->lexeme->value, func)){
+        i++;
+        if(i > tab->nFunc){
+            return -1;
+        }
+    }
+
+    // variable we're searching is record type
+    //if(!strcmp(type->token, "TK_RECORDID")){
+
+    //}
+    dLink function = tab->func[i]->var;
+    // variable is int/float type
+    //else{
+        // only when both are 1, loop will terminate
+        while(strcmp(function->lexName->value, name) || strcmp(function->lexType->value, type)){
+            function = function->next;
+            if(function == NULL)
+                return 0;
+        }
+        return 1;
+    //}
 }

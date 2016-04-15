@@ -1,8 +1,8 @@
 /*
-    BATCH NUMBER - 66
-    SHIVIN SRIVASTAVA - 2013A7PS073P
-    UPADHYAY GAURAV ARVIND - 2013A7PS030P
-*/
+   BATCH NUMBER - 66
+   SHIVIN SRIVASTAVA - 2013A7PS073P
+   UPADHYAY GAURAV ARVIND - 2013A7PS030P
+   */
 
 #include "lexerDef.h"
 static int lineNo=1;
@@ -24,8 +24,8 @@ link getNewNode(){
     new->lex = getNewlex();
     int i;
     for(i = 0; i < 30; i++){
-         new->lex->value[i] = '\0';
-         new->lex->token[i] = '\0';
+        new->lex->value[i] = '\0';
+        new->lex->token[i] = '\0';
     }
     new->next = NULL;
     return new;
@@ -56,7 +56,7 @@ FILE* getStream(FILE *fp, buffer B, int bufflen){
         printf("read some text\n");
         return fp;
     }
- //   printf("%s\n", B);
+    //   printf("%s\n", B);
     return NULL;
 }
 
@@ -134,6 +134,16 @@ char* keywordsFieldId(char *lexeme){
             break;
     }
     return tokens[i];
+}
+
+int inTable(char* lexeme){
+    int i;
+    for(i = 0; i < 24; i++){
+        //strlwr(lexeme);
+        if(!strcmp(lexemes[i], lexeme))
+            return i;
+    }
+    return -1;
 }
 
 int isAllowed(char c){
@@ -565,7 +575,7 @@ lexChain getAllTokens(FILE* fp){
                     strcpy(val,"&");
                     //val[len+1]='\0';
                     val[len]=ch;
-                                       new = getNewNode();
+                    new = getNewNode();
                     strcpy(new->lex->value, val);
                     strcpy(new->lex->token, tok);
                     new->lex->line = lineNo;
@@ -594,7 +604,7 @@ lexChain getAllTokens(FILE* fp){
                     len=0;
                     clear(val);
                     clear(tok);
-		    end++;
+                    end++;
 
 
                     state = 0;
@@ -605,7 +615,7 @@ lexChain getAllTokens(FILE* fp){
                     strcpy(val,"&&");
                     //val[len+1]='\0';
                     val[len]=ch;
-                                       new = getNewNode();
+                    new = getNewNode();
                     strcpy(new->lex->value, val);
                     strcpy(new->lex->token, tok);
                     new->lex->line = lineNo;
@@ -630,7 +640,7 @@ lexChain getAllTokens(FILE* fp){
                     strcpy(val,"@");
                     //val[len+1]='\0';
                     val[len]=ch;
-                                       new = getNewNode();
+                    new = getNewNode();
                     strcpy(new->lex->value, val);
                     strcpy(new->lex->token, tok);
                     new->lex->line = lineNo;
@@ -670,7 +680,7 @@ lexChain getAllTokens(FILE* fp){
                     strcpy(val,"@@");
                     //val[len+1]='\0';
                     val[len]=ch;
-                                       new = getNewNode();
+                    new = getNewNode();
                     strcpy(new->lex->value, val);
                     strcpy(new->lex->token, tok);
                     new->lex->line = lineNo;
@@ -700,7 +710,7 @@ lexChain getAllTokens(FILE* fp){
                     len=0;
                     clear(val);
                     clear(tok);
-		    end++;
+                    end++;
 
 
                     state = 0;
@@ -739,7 +749,7 @@ lexChain getAllTokens(FILE* fp){
                     len=0;
                     clear(val);
                     clear(tok);
-			end++;
+                    end++;
 
 
                     state = 0;
@@ -818,7 +828,7 @@ lexChain getAllTokens(FILE* fp){
                     strcpy(val,"<-");
                     //val[len+1]='\0';
                     val[len]=ch;
-                                       new = getNewNode();
+                    new = getNewNode();
                     strcpy(new->lex->value, val);
                     strcpy(new->lex->token, tok);
                     new->lex->line = lineNo;
@@ -896,7 +906,7 @@ lexChain getAllTokens(FILE* fp){
                     strcpy(val,"!");
                     //val[len+1]='\0';
                     val[len]=ch;
-                                       new = getNewNode();
+                    new = getNewNode();
                     strcpy(new->lex->value, val);
                     strcpy(new->lex->token, tok);
                     new->lex->line = lineNo;
@@ -926,7 +936,7 @@ lexChain getAllTokens(FILE* fp){
                     strcpy(val,"#");
                     //val[len+1]='\0';
                     val[len]=ch;
-                                       new = getNewNode();
+                    new = getNewNode();
                     strcpy(new->lex->value, val);
                     strcpy(new->lex->token, tok);
                     new->lex->line = lineNo;
@@ -962,7 +972,7 @@ lexChain getAllTokens(FILE* fp){
                     clear(val);
                     clear(tok);
                     if(ch==' ')
-                     end++;
+                        end++;
 
 
                     state = 0;
@@ -997,7 +1007,7 @@ lexChain getAllTokens(FILE* fp){
                     strcpy(val,"_");
                     //val[len+1]='\0';
                     val[len]=ch;
-                                       new = getNewNode();
+                    new = getNewNode();
                     strcpy(new->lex->value, val);
                     strcpy(new->lex->token, tok);
                     new->lex->line = lineNo;
@@ -1050,7 +1060,7 @@ lexChain getAllTokens(FILE* fp){
 
                     state = 0;
                     if(ch==' ')
-                     end++;
+                        end++;
                     start = end;
                     break;
                 }
@@ -1114,7 +1124,7 @@ lexChain getAllTokens(FILE* fp){
                     strcpy(val,"_m");
                     //val[len+1]='\0';
                     val[len]=ch;
-                                       new = getNewNode();
+                    new = getNewNode();
                     strcpy(new->lex->value, val);
                     strcpy(new->lex->token, tok);
                     new->lex->line = lineNo;
@@ -1156,7 +1166,7 @@ lexChain getAllTokens(FILE* fp){
                     strcpy(val,"_ma");
                     //val[len+1]='\0';
                     val[len]=ch;
-                                       new = getNewNode();
+                    new = getNewNode();
                     strcpy(new->lex->value, val);
                     strcpy(new->lex->token, tok);
                     new->lex->line = lineNo;
@@ -1198,7 +1208,7 @@ lexChain getAllTokens(FILE* fp){
                     strcpy(val,"_mai");
                     //val[len+1]='\0';
                     val[len]=ch;
-                                       new = getNewNode();
+                    new = getNewNode();
                     strcpy(new->lex->value, val);
                     strcpy(new->lex->token, tok);
                     new->lex->line = lineNo;
@@ -1374,7 +1384,6 @@ lexChain getAllTokens(FILE* fp){
                 break;
             case 25:
                 if(ch >='b' && ch <= 'd'){
-                len++;
                     if(len>20)
                     {
                         end = newLine(B, end);
@@ -1387,9 +1396,10 @@ lexChain getAllTokens(FILE* fp){
                     }
                     else{
                         //val[len+1]='\0';
+
                         val[len]=ch;
-                    	len++;
-                        }
+                        len++;
+                    }
                     ch = B[++end];
                     state=25;
                 }
@@ -1403,6 +1413,7 @@ lexChain getAllTokens(FILE* fp){
                         end = newLine(B, end);
                         state=0;
                         printf("ERROR_1 : Identifier at line %d is longer than the prescribed length of 20 characters\n", lineNo);
+                        break;
 
                     }
                     ch = B[++end];
@@ -1420,7 +1431,7 @@ lexChain getAllTokens(FILE* fp){
                     clear(val);
                     clear(tok);
                     if(ch==' ')
-			end++;
+                        end++;
 
 
                     state = 0;
@@ -1437,6 +1448,10 @@ lexChain getAllTokens(FILE* fp){
                         end = newLine(B, end);
                         state=0;
                         printf("ERROR_1 : Identifier at line %d is longer than the prescribed length of 20 characters\n", lineNo);
+                        len = 0;
+                        clear(val);
+                        clear(tok);
+                        break;
                     }
                     ch = B[++end];
                     state=26;
@@ -1453,11 +1468,9 @@ lexChain getAllTokens(FILE* fp){
                     clear(val);
                     clear(tok);
 
-
-
                     state = 0;
                     if(ch==' ')
-                      end++;
+                        end++;
                     start = end;
                     break;
                 }
@@ -1507,24 +1520,28 @@ lexChain getAllTokens(FILE* fp){
                 else{
                     //call function for deciding keywords and fieldId
                     //printf("hello in kef");
-                    strcpy(tok, keywordsFieldId(val));
-                    //printf("%s\n",tok);
-                    new = getNewNode();
+                    if(inTable(val) == -1){
+                        state = 12;
+                    }
+                    else{
+                        strcpy(tok, keywordsFieldId(val));
+                        new = getNewNode();
 
-                    strcpy(new->lex->value, val);
-                    strcpy(new->lex->token, tok);
-                    new->lex->line = lineNo;
-                    addNode(head1, new);
+                        strcpy(new->lex->value, val);
+                        strcpy(new->lex->token, tok);
+                        new->lex->line = lineNo;
+                        addNode(head1, new);
 
-                    len=0;
-                    clear(val);
-                    clear(tok);
+                        len=0;
+                        clear(val);
+                        clear(tok);
 
-                    state = 0;
-                   if(ch==' ')
-                      end++;
-                    start = end;
-                    break;
+                        state = 0;
+                        if(ch==' ')
+                            end++;
+                        start = end;
+                        break;
+                    }
                 }
                 break;
             default : end = newLine(B, end);

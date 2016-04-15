@@ -102,8 +102,10 @@ int main(int argc, char* argv[]){
     printTree(ast);
 
     symLink stab = createSym();
-    //getSymtable(stab, ast);
+    getSymtable(stab, ast);
+    printSymTable(stab);
 
+    printf("present = %d\n", searchTable(stab, "c4bd56", "int", "_main"));
     //free(ast);
     free(headT);
     free(ch);
