@@ -66,11 +66,11 @@ void getDec(symLink tab, parseTree declarations, int nFunc)
         if(dec->down != NULL)
             cpyLex(dvar->lexType,dec->down->lexeme);
 
-        if((dec->down->left) != NULL)
+        if((dec->down->left)!=NULL)
         {
             dLink g = tab->glo;
             printf("\ninserting in global: ");
-            printTreeNode(dec->down->left);
+            // print(de);
             if(tab->glo == NULL)
                 tab->glo=dvar;
             else
@@ -144,6 +144,7 @@ void printSymTable(symLink tab){
 void getStmt(symLink tab,parseTree stmts,int nFunc){
     //getTypeDef(tab,stmts->down,nFunc);
     getDec(tab,stmts->down->left,nFunc);
+
 }
 
 // filling function in symbol table
@@ -177,19 +178,19 @@ void insertFunc(symLink tab, parseTree ast)
         dLink dinp = createData();
 
         cpyLex(dinp->lexName, tempIn->lexeme);
-//        printf("printing tempin\n");
-//        printTreeNode(tempIn);
+        // printf("printing tempin\n");
+        printTreeNode(tempIn);
         cpyLex(dinp->lexType, tempIn->down->lexeme);
 
-        //printf("printing tempin->down\n");
-  //      printTreeNode(tempIn->down);
+        // printf("printing tempin->down\n");
+        printTreeNode(tempIn->down);
         //printLex(tempIn->down->lexeme);
 
         // handling the first case separately
         if(tab->func[nFunc]->inp == NULL){
             tab->func[nFunc]->inp = dinp;
-            //printf("inserting...\n");
-            //printDNode(dinp);
+            // printf("inserting...\n");
+            printDNode(dinp);
         }
 
         else{
@@ -236,6 +237,8 @@ void getSymtable(symLink s, parseTree ast)
     temp = temp->down->down;
     // for functions
     while(temp != NULL){
+        // printf("\nnode = ");
+        // printTreeNode(temp);
         insertFunc(s, temp);
         s->nFunc++;
         temp = temp->left;

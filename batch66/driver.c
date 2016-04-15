@@ -99,13 +99,13 @@ int main(int argc, char* argv[]){
         close(back);
     }
     parseTree ast = createAst(headT);
-    printTree(ast);
+    //printTree(ast);
 
     symLink stab = createSym();
     getSymtable(stab, ast);
     printSymTable(stab);
 
-    printf("present = %d\n", searchTable(stab, "c4bd56", "int", "_main"));
+    //printf("present = %d\n", searchTable(stab, "c4bd56", "int", "_main"));
     //free(ast);
     free(headT);
     free(ch);
