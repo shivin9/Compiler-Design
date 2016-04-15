@@ -18,8 +18,24 @@ end
 
 _main
 	type record #marks : d4;
-	type int :b3:global;
+	type int :b3: global;
 	type real :c4bd56;	
+
+	while(b5<=d5cb34567)
+		[d4] <--- call _readMarks with parameters [b5];
+		b5c6 <--- b5c6 + d4; 
+		% above displays the sum of records
+		b5 <--- b5 +1;
+	endwhile
+
+	if((~(c4bbb == 0)) &&& (c4bbb > 78.56)) 
+	then
+		c6<--- d4cbcd5677/c4bbb;
+	else
+		write(c4bbb);
+	endif
+
+
 	b3 <--- 7;
 	[c4bd56]<--- call _sumN with parameters [b3];
 	write(c4bd56);

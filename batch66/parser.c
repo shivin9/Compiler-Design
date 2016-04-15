@@ -562,22 +562,25 @@ void printTree(parseTree head)
 parseTree createAst(parseTree pTree){
     parseTree ast;
     ast = pTree;
-    //printTree(ast);
     removePunc(ast, NULL);
     verifyPrev(ast, NULL);
-    // pullUpSingle(ast, NULL);
-    //fixFunId(ast);
-    //verifyPrev(ast, NULL);
-    //printTree(ast);
+
     firstUp(ast);
     verifyPrev(ast, NULL);
+
     removeID(ast);
     verifyPrev(ast, NULL);
+
     pullUpSingle(ast, NULL);
     verifyPrev(ast, NULL);
+
     collapseChains(ast);
     verifyPrev(ast, NULL);
+
     fixPara(ast);
+    fixAssign(ast);
+    pullUpSingle(ast, NULL);
+
     return ast;
 }
 
@@ -918,21 +921,6 @@ void collapseChains(parseTree ast){
 
 }
 
-// void fixArith(parseTree ast){
-//     if (ast == NULL)
-//         return;
-//     int tok_value = ast->val;
-
-//     if(){
-
-//     }
-
-//     else{
-//         fixArith(ast->down);
-//         fixArith(ast->left);
-//     }
-// }
-
 void fixPara(parseTree ast){
     if (ast == NULL)
         return;
@@ -972,5 +960,30 @@ void fixPara(parseTree ast){
     else{
             fixPara(ast->down);
             fixPara(ast->left);
+    }
+}
+
+void fixAssign(parseTree ast){
+    if(ast == NULL)
+        return;
+    if(ast->val == 48 && ast->up->val == 22){
+        ast->up->val = 48;
+        ast->up->lexeme = ast->lexeme;
+        ast->prev->left = ast->left;
+        ast->left->prev = ast->prev;
+        parseTree temp = ast->up->left;
+        ast->up = NULL;
+        ast->down = NULL;
+        ast->left = NULL;
+        ast->prev = NULL;
+        free(ast);
+        fixAssign(temp);
+    }
+    else if(ast->val == 48 && ast->up->val == 26){
+
+    }
+    else{
+        fixAssign(ast->down);
+        fixAssign(ast->left);
     }
 }

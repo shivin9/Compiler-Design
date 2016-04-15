@@ -243,7 +243,6 @@ void getSymtable(symLink s, parseTree ast)
         s->nFunc++;
         temp = temp->left;
     }
-    //printSymTable(s);
     // inserting main function
     insertFunc(s, ast->down->left);
 }
@@ -251,6 +250,7 @@ void getSymtable(symLink s, parseTree ast)
 // to search a variable in the symbol table
 int searchTable(symLink tab, char* name, char* type, char* func){
     int i = 0;
+
     // find the corresponding entry for that function
     while(strcmp(tab->func[i]->lexeme->value, func)){
         i++;
@@ -264,14 +264,68 @@ int searchTable(symLink tab, char* name, char* type, char* func){
 
     //}
     dLink function = tab->func[i]->var;
+    dLink glob = tab->glo;
+    int pres = 0;
     // variable is int/float type
     //else{
         // only when both are 1, loop will terminate
-        while(strcmp(function->lexName->value, name) || strcmp(function->lexType->value, type)){
+        while(function != NULL && (strcmp(function->lexName->value, name) || strcmp(function->lexType->value, type))){
             function = function->next;
-            if(function == NULL)
-                return 0;
+            if(function == NULL){
+                pres = 0;
+                break;
+            }
+        }
+        if(!pres){
+            while(strcmp(glob->lexName->value, name) || strcmp(glob->lexType->value, type)){
+                glob = glob->next;
+                if(glob == NULL){
+                    return 0;
+                }
+            }
         }
         return 1;
+}
+
+// ge the type of variable given the name
+lex getType(symLink tab, char* name, char* func){
+    int i = 0;
+
+    // find the corresponding entry for that function
+    while(strcmp(tab->func[i]->lexeme->value, func)){
+        i++;
+        if(i > tab->nFunc){
+            return NULL;
+        }
+    }
+
+    // variable we're searching is record type
+    //if(!strcmp(type->token, "TK_RECORDID")){
+
     //}
+    dLink function = tab->func[i]->var;
+    dLink glob = tab->glo;
+    int pres = 1;
+    // variable is int/float type
+    //else{
+        // only when both are 1, loop will terminate
+        while(function != NULL && (strcmp(function->lexName->value, name))){
+            function = function->next;
+            if(function == NULL){
+                pres = 0;
+                break;
+            }
+        }
+        if(pres)
+            return function->lexType;
+
+        if(!pres){
+            while(strcmp(glob->lexName->value, name)){
+                glob = glob->next;
+                if(glob == NULL){
+                    return NULL;
+                }
+            }
+        }
+    return glob->lexType;
 }
