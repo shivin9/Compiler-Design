@@ -165,8 +165,7 @@ parseTree create(){
     return head;
 }
 
-int push(int stack[],int top,int rule,int gra[][10])
-{
+int push(int stack[],int top,int rule,int gra[][10]){
     int *a=gra[rule],i=1,j;
     while(a[i]!=-1 && i<9)
         i++;
@@ -182,8 +181,7 @@ int push(int stack[],int top,int rule,int gra[][10])
     //printf("after push: %s\n",terms[stack[top]]);
     return top;
 }
-int pop(int stack[],int top)
-{
+int pop(int stack[],int top){
     //printf("popping : %s\n",terms[stack[top]]);
     stack[top]=-1;
     --top;
@@ -192,8 +190,7 @@ int pop(int stack[],int top)
 }
 
 // returns the pointer to the required node
-parseTree search(parseTree start, int a)
-{
+parseTree search(parseTree start, int a){
     parseTree temp;
     if(start==NULL)
         return NULL;
@@ -255,8 +252,7 @@ void insert(parseTree temp, int rule, int gra[][10], lex lexem){
     }
 }
 
-void printStack(int a[],int top)
-{
+void printStack(int a[],int top){
     int i=top;
     printf("***************\n");
     for(i;i>=0;i--)
@@ -289,8 +285,7 @@ void fixTree(parseTree node, lexChain ch){
 
 //-------------------------------------------MAIN FUNCTIONS--------------------------------------
 
-parseTree parseInputSourceCode(parseTree head, FILE *fp, lexChain ch)
-{
+parseTree parseInputSourceCode(parseTree head, FILE *fp, lexChain ch){
     int stack[256],top=1,i=2;
     stack[0]=111;
     stack[1]=0;
@@ -501,8 +496,7 @@ void createParseTable(int G[][10], tableLink tabl){
     }
 }
 
-void printTree(parseTree head)
-{
+void printTree(parseTree head){
     if((head==NULL)||(head->val==110)){
         //printf("head = NULL\n");
         return;
@@ -579,8 +573,12 @@ parseTree createAst(parseTree pTree){
 
     fixPara(ast);
     fixAssign(ast);
-    pullUpSingle(ast, NULL);
+    collapseChains(ast);
+    fixVar(ast);
 
+    pullUpSingle(ast, NULL);
+    verifyPrev(ast, NULL);
+    //fixBool(ast);
     return ast;
 }
 
@@ -648,7 +646,7 @@ void pullUpSingle(parseTree ast, parseTree prev){
 
     if (tok_value == 7  || tok_value == 8  || tok_value == 9  || tok_value == 19 || tok_value == 21 || tok_value == 24 ||
         tok_value == 27 || tok_value == 32 || tok_value == 37 || tok_value == 38 || tok_value == 39 || tok_value == 41 ||
-        tok_value == 42 || tok_value == 43 || tok_value == 44 || tok_value == 45 || tok_value == 46 || tok_value == 47){
+        tok_value == 42 || tok_value == 43 || tok_value == 44 /*|| tok_value == 45*/ || tok_value == 46 || tok_value == 47){
 
         //if(ast->prev == NULL && ast->left == NULL){
         if(prev == NULL){
@@ -689,8 +687,7 @@ void pullUpSingle(parseTree ast, parseTree prev){
 
 /* fix rules of type
 
-<input_par> ===> TK_INPUT TK_PARAMETER TK_LIST TK_SQL <parameter_list> TK_SQR
-{<input_par>.ptr = newNode([makeLeaf("TK_INPUT", "input"), <parameter_list>.ptr])}
+<input_par> ===> TK_INPUT TK_PARAMETER TK_LIST TK_SQL <parameter_list> TK_SQR{<input_par>.ptr = newNode([makeLeaf("TK_INPUT", "input"), <parameter_list>.ptr])}
 
 */
 void firstUp(parseTree ast){
@@ -764,9 +761,6 @@ void firstUp(parseTree ast){
         }
     }
     else{
-        //printf("firstup else ast->down = %s\n", terms[ast->down->val]);
-        //printf("firstup else ast->left = %s\n", terms[ast->left->val]);
-
         firstUp(ast->down);
         firstUp(ast->left);
     }
@@ -774,11 +768,9 @@ void firstUp(parseTree ast){
 
 /*
 rules of type :-
-<booleanExpression> ===> TK_OP <booleanExpression> TK_CL <logicalOp> TK_OP <booleanExpression> TK_CL ****
-{<booleanExpression>.ptr = newNode([<logicalOp>.ptr, <booleanExpression>.ptr, <booleanExpression>.ptr])}
+<booleanExpression> ===> TK_OP <booleanExpression> TK_CL <logicalOp> TK_OP <booleanExpression> TK_CL ****{<booleanExpression>.ptr = newNode([<logicalOp>.ptr, <booleanExpression>.ptr, <booleanExpression>.ptr])}
 
-<declaration> ===> TK_TYPE <dataType> TK_COLON TK_ID <global_or_not> TK_SEM
-{<declaration>.ptr = newNode([makeLeaf("TK_ID", id.entry), <dataType>.ptr, <global_or_not>.ptr])}
+<declaration> ===> TK_TYPE <dataType> TK_COLON TK_ID <global_or_not> TK_SEM{<declaration>.ptr = newNode([makeLeaf("TK_ID", id.entry), <dataType>.ptr, <global_or_not>.ptr])}
 
 */
 void removeID(parseTree ast){
@@ -982,8 +974,77 @@ void fixAssign(parseTree ast){
     else if(ast->val == 48 && ast->up->val == 26){
 
     }
+    else if(ast->val == 23 && ast->up->val == 48){
+        // ast is at the edge
+        if(ast->prev == NULL)
+            ast->up->down = ast->down;
+
+        if(ast->down != NULL)
+            ast->down->up = ast->up;
+
+        ast->down->left = ast->left;
+
+        if(ast->left != NULL)
+            ast->left->prev = ast->down;
+        free(ast);
+    }
     else{
         fixAssign(ast->down);
         fixAssign(ast->left);
+    }
+}
+
+void fixVar(parseTree ast){
+    if(ast == NULL)
+        return;
+    else if(ast->left != NULL && ast->left->up->val == 65){
+        ast->left->prev = ast;
+        ast->left->up = ast->up;
+    }
+    else{
+        fixVar(ast->down);
+        fixVar(ast->left);
+    }
+}
+
+void fixBool(parseTree ast){
+    if(ast == NULL)
+        return;
+    else if(ast->val >= 93 && ast->val <= 99 || ast->val == 101){
+
+        if(ast->left != NULL){
+            ast->left->prev = ast->prev;
+            ast->prev->left = ast->left;
+            ast->left->up = ast;
+            printf("ast = %s, ast->left = %s\n", terms[ast->val], terms[ast->left->val]);
+            printf("ast = %s, ast->left->prev = %s\n", terms[ast->val], terms[ast->left->prev->val]);
+        }
+        ast->prev->left = ast->left;
+        ast->down = ast->prev;
+        ast->prev->up = ast;
+        ast->left = ast->up->left;
+        if(ast->up->prev == NULL){
+            printf("ast = %s, ast->up = %s\n", terms[ast->val], terms[ast->up->val]);
+            ast->up->up->down = ast;
+            ast->up->left->prev = ast;
+            ast->up = ast->up->up;
+            fixBool(ast->left);
+            fixBool(ast->down);
+        }
+        else{
+            ast->up->prev->left = ast;
+            if(ast->up->left != NULL)
+                ast->up->left->prev = ast;
+            //free(ast->up);
+            ast->up = ast->up->up;
+            printf("ast = %s, ast->down->left = %s\n", terms[ast->val], terms[ast->down->left->val]);
+
+            fixBool(ast->left);
+            fixBool(ast->down);
+        }
+    }
+    else{
+        fixBool(ast->down);
+        fixBool(ast->left);
     }
 }

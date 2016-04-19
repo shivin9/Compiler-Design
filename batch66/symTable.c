@@ -34,7 +34,6 @@ symLink createSym()
     }
     tab->glo=NULL;
     tab->nFunc=0;
-    printf("returning tab!\n");
     return tab;
 }
 
@@ -69,8 +68,6 @@ void getDec(symLink tab, parseTree declarations, int nFunc)
         if((dec->down->left)!=NULL)
         {
             dLink g = tab->glo;
-            printf("\ninserting in global: ");
-            // print(de);
             if(tab->glo == NULL)
                 tab->glo=dvar;
             else
@@ -179,18 +176,18 @@ void insertFunc(symLink tab, parseTree ast)
 
         cpyLex(dinp->lexName, tempIn->lexeme);
         // printf("printing tempin\n");
-        printTreeNode(tempIn);
+        // printTreeNode(tempIn);
         cpyLex(dinp->lexType, tempIn->down->lexeme);
 
         // printf("printing tempin->down\n");
-        printTreeNode(tempIn->down);
+        // printTreeNode(tempIn->down);
         //printLex(tempIn->down->lexeme);
 
         // handling the first case separately
         if(tab->func[nFunc]->inp == NULL){
             tab->func[nFunc]->inp = dinp;
             // printf("inserting...\n");
-            printDNode(dinp);
+            // printDNode(dinp);
         }
 
         else{
@@ -235,10 +232,9 @@ void getSymtable(symLink s, parseTree ast)
 {
     parseTree temp = ast;
     temp = temp->down->down;
+
     // for functions
     while(temp != NULL){
-        // printf("\nnode = ");
-        // printTreeNode(temp);
         insertFunc(s, temp);
         s->nFunc++;
         temp = temp->left;
@@ -287,7 +283,7 @@ int searchTable(symLink tab, char* name, char* type, char* func){
         return 1;
 }
 
-// ge the type of variable given the name
+// gets the type of variable given the name
 lex getType(symLink tab, char* name, char* func){
     int i = 0;
 
@@ -303,29 +299,55 @@ lex getType(symLink tab, char* name, char* func){
     //if(!strcmp(type->token, "TK_RECORDID")){
 
     //}
-    dLink function = tab->func[i]->var;
     dLink glob = tab->glo;
+    dLink function = tab->func[i]->var;
     int pres = 1;
+    // no var in function
+    if(function == NULL)
+        pres = 0;
     // variable is int/float type
     //else{
         // only when both are 1, loop will terminate
-        while(function != NULL && (strcmp(function->lexName->value, name))){
-            function = function->next;
-            if(function == NULL){
-                pres = 0;
-                break;
-            }
+    while(function != NULL && (strcmp(function->lexName->value, name))){
+        function = function->next;
+        if(function == NULL){
+            pres = 0;
+            break;
         }
-        if(pres)
+    }
+    if(pres)
             return function->lexType;
 
-        if(!pres){
-            while(strcmp(glob->lexName->value, name)){
-                glob = glob->next;
-                if(glob == NULL){
-                    return NULL;
-                }
+    if(!pres){
+        // printf("glob->lexType = %s\n", glob->lexType->value);
+        // printf("glob->lexName = %s, name = %s\n", glob->lexName->value, name);
+        // if(glob->next == NULL && !strcmp(glob->lexName->value, name)){
+        //     printf("glob->lexName = %s\n", glob->lexName->value);
+        //     return glob->lexType;
+        // }
+
+        if(glob == NULL)
+            return NULL;
+
+        while(strcmp(glob->lexName->value, name)){
+            glob = glob->next;
+            if(glob == NULL){
+                return NULL;
             }
         }
+    }
     return glob->lexType;
+}
+
+int isPresent(symLink tab, char* name){
+    int i = 0;
+
+    // NULL ==> variable is not present in the table
+    while(getType(tab, name, tab->func[i]->lexeme->value) == NULL){
+        if(tab->func[i]->lexeme == NULL)
+            return 0;
+        i++;
+    }
+    // variable is present in the table
+    return 1;
 }

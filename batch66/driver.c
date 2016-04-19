@@ -102,11 +102,19 @@ int main(int argc, char* argv[]){
     printTree(ast);
 
     symLink stab = createSym();
-    getSymtable(stab, ast);
-    printSymTable(stab);
+    //getSymtable(stab, ast);
+    //printSymTable(stab);
 
-    printf("present = %d\n", searchTable(stab, "b3", "int", "sumM"));
-    //free(ast);
+    //printf("present = %d\n", searchTable(stab, "b3", "int", "sumM"));
+    lex temp = getType(stab, "d3", "sumN");
+
+    if(temp != NULL){
+        printf("type of var is %s\n", temp->value);
+    }
+
+    // currently for main function only...
+    //checkAssign(stab, ast->down->left, ast->down->left);
+
     free(headT);
     free(ch);
     return 0;

@@ -1519,9 +1519,9 @@ lexChain getAllTokens(FILE* fp){
                 }
                 else{
                     //call function for deciding keywords and fieldId
-                    //printf("hello in kef");
                     if(inTable(val) == -1){
-                        state = 12;
+                        // go for TK_FIELDID
+                        state = 29;
                     }
                     else{
                         strcpy(tok, keywordsFieldId(val));
@@ -1542,6 +1542,34 @@ lexChain getAllTokens(FILE* fp){
                         start = end;
                         break;
                     }
+                }
+                break;
+            case 29:
+                if (ch>= 'a' && ch<='z')
+                {
+                    //val[len+1]='\0';
+                    val[len]=ch;
+                    len++;
+                    ch = B[++end];
+                    state=29;
+                }
+                else{
+                    strcpy(tok,"TK_FIELDID");
+                    new = getNewNode();
+                    // printf("found tk_recordid\n");
+                    strcpy(new->lex->value, val);
+                    strcpy(new->lex->token, tok);
+                    new->lex->line = lineNo;
+                    addNode(head1, new);
+                    len=0;
+                    clear(val);
+                    clear(tok);
+                    if(ch==' ')
+                        end++;
+
+
+                    state = 0;
+                    break;
                 }
                 break;
             default : end = newLine(B, end);

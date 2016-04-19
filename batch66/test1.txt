@@ -1,0 +1,20 @@
+_main
+	record #marks
+		type real: maths; 
+		type real: physics; 
+		type real: chemistry;
+	endrecord;
+
+	type record #marks : d4;
+
+	b5c6.maths <--- 0.00;
+	b5c6.physics <--- 0.00;
+	b5c6.chemistry <---0.00;
+
+	write(d4.maths);
+	write(d4.physics);
+	write(d4.chemistry);
+
+	return;
+end
+$
