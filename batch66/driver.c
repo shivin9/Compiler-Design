@@ -99,18 +99,19 @@ int main(int argc, char* argv[]){
         close(back);
     }
     parseTree ast = createAst(headT);
-    printTree(ast);
+    //printTree(ast);
 
     symLink stab = createSym();
-    //getSymtable(stab, ast);
+    getSymtable(stab, ast);
     //printSymTable(stab);
 
-    //printf("present = %d\n", searchTable(stab, "b3", "int", "sumM"));
-    lex temp = getType(stab, "d3", "sumN");
+    //printf("present = %d\n", isPresent(stab, "c3b"));
 
-    if(temp != NULL){
-        printf("type of var is %s\n", temp->value);
-    }
+    // lex temp = getType(stab, "b3", "sumN");
+
+    // if(temp != NULL){
+    //     printf("type of var is %s\n", temp->value);
+    // }
 
     // currently for main function only...
     //checkAssign(stab, ast->down->left, ast->down->left);

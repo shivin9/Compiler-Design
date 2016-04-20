@@ -697,7 +697,7 @@ void firstUp(parseTree ast){
     // all terminals... so ast->down == NULL
     // for rule <singleOrRecId> ===> TK_ID <new_24> involving TK_ID
 
-    if ((tok_value == 51 && (ast->up->val == 23 || ast->up->val == 46)) || /*tok_value == 54 || tok_value == 58 ||*/
+    if ((tok_value == 102 && ast->up->val == 13) || (tok_value == 51 && (ast->up->val == 23 || ast->up->val == 46)) || /*tok_value == 54 || tok_value == 58 ||*/
         (tok_value == 66 && ast->down == NULL) || (tok_value == 54 && ast->up->val == 3) || tok_value == 62 ||
         (tok_value == 67 && ast->down == NULL) || tok_value == 69 || (tok_value == 72 && ast->up->val == 31) ||
          tok_value == 73 /*|| tok_value == 74 */|| tok_value == 78 || tok_value == 92 || tok_value == 102){
@@ -886,7 +886,7 @@ void collapseChains(parseTree ast){
 
     int tok_val = ast->val;
 
-    if(ast->prev != NULL && ast->left== NULL && (tok_val== 2 || tok_val == 20 || tok_val == 10 || tok_val == 17)){
+    if(ast->prev != NULL && ast->left== NULL && (tok_val== 2 || tok_val == 20 || tok_val == 10 || tok_val == 17 || tok_val == 13 || tok_val == 15)){
         //printf("collapsing %s\n", terms[ast->val]);
 
         ast->prev->left = ast->down;

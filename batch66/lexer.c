@@ -109,10 +109,14 @@ int newLine(char* B, int curr){
 }
 
 void printLex(lex l){
+    if(l == NULL)
+        return;
     printf("token = %s, value = %s, line = %d\n", l->token, l->value, l->line);
 }
 
 void printNode(link l){
+    if(l == NULL)
+        return;
     printf("token = %s, value = %s, line = %d", l->lex->token, l->lex->value,
             l->lex->line);
 }

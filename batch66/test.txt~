@@ -3,7 +3,7 @@
 %The variable d3 maintains the sum of values
 _sumN  input parameter list [int d5cc34, real d4, int d5cc]
 output parameter list[real d3];
-	type int :d3;
+	type int :d6;
 	d3 <--- d3 + (d5 + (b3 + c3) * 108);
 	read(c3bd);
 	return [d3, d5];

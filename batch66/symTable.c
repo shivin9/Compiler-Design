@@ -46,7 +46,131 @@ void cpyLex(lex d,lex l)
     d->line=l->line;
 }
 
+// to search a variable in the symbol table
+int searchTable(symLink tab, char* name, char* type, char* func){
+    int i = 0;
 
+    // find the corresponding entry for that function
+    while(strcmp(tab->func[i]->lexeme->value, func)){
+        i++;
+        if(i > tab->nFunc){
+            return -1;
+        }
+    }
+
+    // variable we're searching is record type
+    //if(!strcmp(type->token, "TK_RECORDID")){
+
+    //}
+    dLink function = tab->func[i]->var;
+    dLink glob = tab->glo;
+    int pres = 0;
+    // variable is int/float type
+    //else{
+        // only when both are 1, loop will terminate
+    while(function != NULL && (strcmp(function->lexName-> value, name) && strcmp(function->lexType->value, type))){
+        function = function->next;
+        if(function == NULL){
+            pres = 0;
+            break;
+        }
+    }
+    if(!pres){
+        if(glob == NULL)
+            return 0;
+        while(strcmp(glob->lexName->value, name)){
+            glob = glob->next;
+            if(glob == NULL){
+                return 0;
+            }
+        }
+    }
+        return 1;
+}
+
+// gets the type of variable given the name
+lex getType(symLink tab, char* name, char* func){
+    int i = 0;
+
+    // find the corresponding entry for that function
+    while(strcmp(tab->func[i]->lexeme->value, func)){
+        i++;
+        if(i > tab->nFunc){
+            return NULL;
+        }
+    }
+
+    // variable we're searching is record type
+    //if(!strcmp(type->token, "TK_RECORDID")){
+
+    //}
+    dLink glob = tab->glo;
+    dLink function = tab->func[i]->var;
+    int pres = 1;
+    // no var in function
+    if(function == NULL)
+        pres = 0;
+    // variable is int/float type
+    //else{
+        // only when both are 1, loop will terminate
+    while(function != NULL && (strcmp(function->lexName->value, name))){
+        function = function->next;
+        if(function == NULL){
+            pres = 0;
+            break;
+        }
+    }
+    if(pres)
+            return function->lexType;
+
+    if(!pres){
+        // printf("glob->lexType = %s\n", glob->lexType->value);
+        // printf("glob->lexName = %s, name = %s\n", glob->lexName->value, name);
+        // if(glob->next == NULL && !strcmp(glob->lexName->value, name)){
+        //     printf("glob->lexName = %s\n", glob->lexName->value);
+        //     return glob->lexType;
+        // }
+
+        if(glob == NULL)
+            return NULL;
+
+        while(strcmp(glob->lexName->value, name)){
+            glob = glob->next;
+            if(glob == NULL){
+                return NULL;
+            }
+        }
+    }
+    return glob->lexType;
+}
+
+int isPresent(symLink tab, char* name){
+    int i = 0;
+
+    // NULL ==> variable is not present in the table
+    while(getType(tab, name, tab->func[i]->lexeme->value) == NULL){
+        if(tab->func[i]->lexeme == NULL || i == tab->nFunc)
+            return 0;
+        i++;
+    }
+    if(i == tab->nFunc+1)
+    // variable is present in the table
+    return 1;
+}
+
+int isGlobal(symLink tab, char* name){
+    dLink glob = tab->glo;
+    if(glob == NULL)
+            return 0;
+
+        while(strcmp(glob->lexName->value, name)){
+            glob = glob->next;
+            if(glob == NULL){
+                return 0;
+            }
+        }
+    return 1;
+}
 // linked list of dLinks
 // void getTypeDef(symLink tab,parseTree typeDef,int nFunc)
 // {
@@ -62,8 +186,30 @@ void getDec(symLink tab, parseTree declarations, int nFunc)
         dLink dvar = createData();
         cpyLex(dvar->lexName,dec->lexeme);
 
-        if(dec->down != NULL)
-            cpyLex(dvar->lexType,dec->down->lexeme);
+        // INT/REAL IS down
+        if(dec->down != NULL){
+            cpyLex(dvar->lexType, dec->down->lexeme);
+        }
+
+        // to check whether a variable is being reinitialized
+        lex temp1 = getType(tab, dvar->lexName->value, tab->func[nFunc]->lexeme->value);
+
+        printLex(temp1);
+
+        if(temp1 == NULL){
+            printf("temp1 is NULL\n");
+        }
+
+        if(tab->glo == NULL){
+            printf("global list is NULL\n");
+        }
+
+        printf("%s, %s, global = %d\n", dvar->lexName->value, tab->func[nFunc]->lexeme->value, isGlobal(tab, dvar->lexName->value));
+
+        if((temp1 != NULL) || (isGlobal(tab, dvar->lexName->value)  &&  tab->glo != NULL)){
+            printf("variable %s already declared in line %d\n", dvar->lexName->value, dec->line);
+            exit(0);
+        }
 
         if((dec->down->left)!=NULL)
         {
@@ -83,7 +229,6 @@ void getDec(symLink tab, parseTree declarations, int nFunc)
                 tab->func[nFunc]->var=dvar;
             else{
                 dLink temp = tab->func[nFunc]->var;
-
                 while(temp->next != NULL)
                     temp = temp->next;
 
@@ -175,19 +320,11 @@ void insertFunc(symLink tab, parseTree ast)
         dLink dinp = createData();
 
         cpyLex(dinp->lexName, tempIn->lexeme);
-        // printf("printing tempin\n");
-        // printTreeNode(tempIn);
         cpyLex(dinp->lexType, tempIn->down->lexeme);
-
-        // printf("printing tempin->down\n");
-        // printTreeNode(tempIn->down);
-        //printLex(tempIn->down->lexeme);
 
         // handling the first case separately
         if(tab->func[nFunc]->inp == NULL){
             tab->func[nFunc]->inp = dinp;
-            // printf("inserting...\n");
-            // printDNode(dinp);
         }
 
         else{
@@ -241,113 +378,4 @@ void getSymtable(symLink s, parseTree ast)
     }
     // inserting main function
     insertFunc(s, ast->down->left);
-}
-
-// to search a variable in the symbol table
-int searchTable(symLink tab, char* name, char* type, char* func){
-    int i = 0;
-
-    // find the corresponding entry for that function
-    while(strcmp(tab->func[i]->lexeme->value, func)){
-        i++;
-        if(i > tab->nFunc){
-            return -1;
-        }
-    }
-
-    // variable we're searching is record type
-    //if(!strcmp(type->token, "TK_RECORDID")){
-
-    //}
-    dLink function = tab->func[i]->var;
-    dLink glob = tab->glo;
-    int pres = 0;
-    // variable is int/float type
-    //else{
-        // only when both are 1, loop will terminate
-        while(function != NULL && (strcmp(function->lexName->value, name) || strcmp(function->lexType->value, type))){
-            function = function->next;
-            if(function == NULL){
-                pres = 0;
-                break;
-            }
-        }
-        if(!pres){
-            while(strcmp(glob->lexName->value, name) || strcmp(glob->lexType->value, type)){
-                glob = glob->next;
-                if(glob == NULL){
-                    return 0;
-                }
-            }
-        }
-        return 1;
-}
-
-// gets the type of variable given the name
-lex getType(symLink tab, char* name, char* func){
-    int i = 0;
-
-    // find the corresponding entry for that function
-    while(strcmp(tab->func[i]->lexeme->value, func)){
-        i++;
-        if(i > tab->nFunc){
-            return NULL;
-        }
-    }
-
-    // variable we're searching is record type
-    //if(!strcmp(type->token, "TK_RECORDID")){
-
-    //}
-    dLink glob = tab->glo;
-    dLink function = tab->func[i]->var;
-    int pres = 1;
-    // no var in function
-    if(function == NULL)
-        pres = 0;
-    // variable is int/float type
-    //else{
-        // only when both are 1, loop will terminate
-    while(function != NULL && (strcmp(function->lexName->value, name))){
-        function = function->next;
-        if(function == NULL){
-            pres = 0;
-            break;
-        }
-    }
-    if(pres)
-            return function->lexType;
-
-    if(!pres){
-        // printf("glob->lexType = %s\n", glob->lexType->value);
-        // printf("glob->lexName = %s, name = %s\n", glob->lexName->value, name);
-        // if(glob->next == NULL && !strcmp(glob->lexName->value, name)){
-        //     printf("glob->lexName = %s\n", glob->lexName->value);
-        //     return glob->lexType;
-        // }
-
-        if(glob == NULL)
-            return NULL;
-
-        while(strcmp(glob->lexName->value, name)){
-            glob = glob->next;
-            if(glob == NULL){
-                return NULL;
-            }
-        }
-    }
-    return glob->lexType;
-}
-
-int isPresent(symLink tab, char* name){
-    int i = 0;
-
-    // NULL ==> variable is not present in the table
-    while(getType(tab, name, tab->func[i]->lexeme->value) == NULL){
-        if(tab->func[i]->lexeme == NULL)
-            return 0;
-        i++;
-    }
-    // variable is present in the table
-    return 1;
 }

@@ -5,7 +5,6 @@ typedef struct dNode dNode;
 typedef struct dNode *dLink;
 
 // function box
-
 typedef struct funcBox funcBox;
 typedef struct funcBox *funcLink;
 
