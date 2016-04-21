@@ -1,3 +1,9 @@
+/*
+    BATCH NUMBER - 66
+    SHIVIN SRIVASTAVA - 2013A7PS073P
+    UPADHYAY GAURAV ARVIND - 2013A7PS030P
+*/
+
 #include "symData.h"
 
 void checkTree(parseTree ast, symLink tab, char* func, lex type){

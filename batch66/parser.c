@@ -1048,3 +1048,11 @@ void fixBool(parseTree ast){
         fixBool(ast->left);
     }
 }
+
+int sizeofTree(parseTree tree){
+    if(tree == NULL)
+        return 0;
+    else{
+        return sizeof(tree) + sizeofTree(tree->down) + sizeofTree(tree->left);
+    }
+}

@@ -93,17 +93,21 @@ int main(int argc, char* argv[]){
 
         printf("\nlexemeCurrentNode     lineno   token   valueIfNumber   parentNodeSymbol   isLeafNode(yes/no)    NodeSymbol\n");
         printTree(headT);
-
         fflush(stdout);
         dup2(back, 1);
         close(back);
     }
     parseTree ast = createAst(headT);
     //printTree(ast);
-
+    printf("s1 = %d, s2 = %d\n", sizeofTree(headT), sizeofTree(ast));
     symLink stab = createSym();
     getSymtable(stab, ast);
-    //printSymTable(stab);
+    printSymTable(stab);
+    testRules(stab, ast);
+
+    if(!searchTable(stab, "d3", "_main")){
+            printf("variable %s is undeclared\n", "d3");
+    }
 
     //printf("present = %d\n", isPresent(stab, "c3b"));
 

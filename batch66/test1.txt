@@ -12,7 +12,9 @@ _main
 	endrecord;
 
 	type record #marks : d4;
-
+	type int :d3: global;
+	d3 <--- 3.2;
+	d5 <--- 10;
 	b5c6.maths <--- 0.00;
 	b5c6.physics <--- 0.00;
 	b5c6.chemistry <---0.00;

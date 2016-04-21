@@ -18,7 +18,8 @@ end
 
 _main
 	type record #marks : d4;
-	type int :d3: global;
+	type int :d5: global;
+	type int :d6;
 	type real :c4bd56;	
 
 	while(b5<=d5cb34567)
