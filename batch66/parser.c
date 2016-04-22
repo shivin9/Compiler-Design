@@ -597,20 +597,20 @@ void removePunc(parseTree ast, parseTree prev){
         return;
 
     int tok_value = ast->val;
-    if (tok_value < 48 && ast->down == NULL){
-        if(prev != NULL){
-            prev->left = ast->left;
-            ast->left->prev = prev;
-            removePunc(ast->left, prev);
-            free(ast);
-        }
-        else{
-            if(ast->up != NULL)
-                ast->up->down = ast->down;
-            removePunc(ast->left, NULL);
-        }
-    }
-    else if
+    // if (tok_value < 48 && ast->down == NULL){
+    //     if(prev != NULL){
+    //         prev->left = ast->left;
+    //         ast->left->prev = prev;
+    //         removePunc(ast->left, prev);
+    //         free(ast);
+    //     }
+    //     else{
+    //         if(ast->up != NULL)
+    //             ast->up->down = ast->down;
+    //         removePunc(ast->left, NULL);
+    //     }
+    // }
+    if
        (tok_value == 55 || tok_value == 56 || tok_value == 57 || tok_value == 61 || tok_value == 64 ||
         tok_value == 65 || tok_value == 68 || tok_value == 71 || tok_value == 74 || tok_value == 75 ||
         tok_value == 76 || tok_value == 77 || tok_value == 79 || tok_value == 80 || tok_value == 81 ||
@@ -646,7 +646,7 @@ void pullUpSingle(parseTree ast, parseTree prev){
 
     if (tok_value == 7  || tok_value == 8  || tok_value == 9  || tok_value == 19 || tok_value == 21 || tok_value == 24 ||
         tok_value == 27 || tok_value == 32 || tok_value == 37 || tok_value == 38 || tok_value == 39 || tok_value == 41 ||
-        tok_value == 42 || tok_value == 43 || tok_value == 44 /*|| tok_value == 45*/ || tok_value == 46 || tok_value == 47){
+        tok_value == 42 || tok_value == 43 || tok_value == 44 /*|| tok_value == 45 || tok_value == 46*/){
 
         //if(ast->prev == NULL && ast->left == NULL){
         if(prev == NULL){
@@ -697,7 +697,7 @@ void firstUp(parseTree ast){
     // all terminals... so ast->down == NULL
     // for rule <singleOrRecId> ===> TK_ID <new_24> involving TK_ID
 
-    if ((tok_value == 102 && ast->up->val == 13) || (tok_value == 51 && (ast->up->val == 23 || ast->up->val == 46)) || /*tok_value == 54 || tok_value == 58 ||*/
+    if ((tok_value == 102 && ast->up->val == 13) || (tok_value == 51 && (ast->up->val == 23)) || /*tok_value == 54 || tok_value == 58 ||*/
         (tok_value == 66 && ast->down == NULL) || (tok_value == 54 && ast->up->val == 3) || tok_value == 62 ||
         (tok_value == 67 && ast->down == NULL) || tok_value == 69 || (tok_value == 72 && ast->up->val == 31) ||
          tok_value == 73 /*|| tok_value == 74 */|| tok_value == 78 || tok_value == 92 || tok_value == 102){
@@ -910,7 +910,6 @@ void collapseChains(parseTree ast){
         collapseChains(ast->down);
         collapseChains(ast->left);
     }
-
 }
 
 void fixPara(parseTree ast){
@@ -926,8 +925,11 @@ void fixPara(parseTree ast){
             ast->prev = ast->prev->up;
             ast->up = ast->up->up;
         }
+        parseTree temp;
 
-        parseTree temp = ast->down->left->left;
+        if(ast->down != NULL)
+            temp = ast->down->left->left;
+
         ast->prev->left = ast->down->left;
         // printf("ast->prev->left = %s\n", terms[ast->prev->left->val]);
 
@@ -971,9 +973,9 @@ void fixAssign(parseTree ast){
         free(ast);
         fixAssign(temp);
     }
-    else if(ast->val == 48 && ast->up->val == 26){
+    // else if(ast->val == 48 && ast->up->val == 26){
 
-    }
+    // }
     else if(ast->val == 23 && ast->up->val == 48){
         // ast is at the edge
         if(ast->prev == NULL)
@@ -1050,9 +1052,13 @@ void fixBool(parseTree ast){
 }
 
 int sizeofTree(parseTree tree){
-    if(tree == NULL)
-        return 0;
+    if(tree->down == NULL && tree->left == NULL)
+        return 1;
+    else if(tree->down == NULL && tree->left != NULL)
+        return 1 + sizeofTree(tree->left);
+    else if(tree->down != NULL && tree->left == NULL)
+        return 1 + sizeofTree(tree->down);
     else{
-        return sizeof(tree) + sizeofTree(tree->down) + sizeofTree(tree->left);
+        return 1 + sizeofTree(tree->down) + sizeofTree(tree->left);
     }
 }

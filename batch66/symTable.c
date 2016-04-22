@@ -111,31 +111,37 @@ lex getType(symLink tab, char* name, char* func){
 
     //}
     dLink glob = tab->glo;
-    dLink function = tab->func[i]->var;
-    int pres = 1;
+    dLink varlist = tab->func[i]->var;
+    int pres, cnt = 0;
     // no var in function
-    if(function == NULL)
-        pres = 0;
-    // variable is int/float type
-    //else{
-    // only when both are 1, loop will terminate
-    while(function != NULL && (strcmp(function->lexName->value, name))){
-        function = function->next;
-        if(function == NULL){
+
+    while(cnt < 3){
+        pres = 1;
+        if(cnt == 1)
+            varlist = tab->func[i]->inp;
+
+        if(cnt == 2)
+            varlist = tab->func[i]->out;
+
+        if(varlist == NULL)
             pres = 0;
-            break;
+
+        // variable is int/float type
+        // only when both are 1, loop will terminate
+
+        while(varlist != NULL && (strcmp(varlist->lexName->value, name))){
+            varlist = varlist->next;
+            if(varlist == NULL){
+                pres = 0;
+                break;
+            }
         }
+        if(pres)
+            return varlist->lexType;
+        cnt++;
     }
-    if(pres)
-        return function->lexType;
 
     if(!pres){
-        // printf("glob->lexType = %s\n", glob->lexType->value);
-        // printf("glob->lexName = %s, name = %s\n", glob->lexName->value, name);
-        // if(glob->next == NULL && !strcmp(glob->lexName->value, name)){
-        //     printf("glob->lexName = %s\n", glob->lexName->value);
-        //     return glob->lexType;
-        // }
 
         if(glob == NULL)
             return NULL;
@@ -198,8 +204,7 @@ void getDec(symLink tab, parseTree declarations, int nFunc)
         // to check whether a variable is being reinitialized
         //printLex();
         if(isPresent(tab, dvar->lexName->value)){
-            printf("variable %s of type %s already declared in line %d\n", dvar->lexName->value, dvar->lexType->value, dec->line);
-            exit(0);
+            printf("line %d: variable %s of type %s already declared\n", dec->line, dvar->lexName->value, dvar->lexType->value);
         }
 
         if((dec->down->left)!=NULL)
@@ -209,9 +214,14 @@ void getDec(symLink tab, parseTree declarations, int nFunc)
                 tab->glo=dvar;
             else
             {
-                while(g->next != NULL)
-                    g=g->next;
-                g->next=dvar;
+                while(g->next != NULL){
+                    if(!isGlobal(tab, dvar->lexName->value)){
+                        g=g->next;
+                        g->next=dvar;
+                    }
+                    else
+                        g = g->next;
+                }
             }
         }
         else
@@ -247,12 +257,14 @@ void printFunBox(funcLink flink){
     if(flink == NULL)
         return;
     else{
+        printDNode(flink->inp, flink->lexeme->value);
         printDNode(flink->var, flink->lexeme->value);
+        printDNode(flink->out, flink->lexeme->value);
     }
 }
 
 void printSymTable(symLink tab){
-    printf("nFuncs = %d\n", tab->nFunc);
+    printf("\n\nLexeme              type                scope                offset\n");
     int i;
     for(i = 0; i < tab->nFunc + 1; i++){
         printFunBox(tab->func[i]);
@@ -273,8 +285,7 @@ void insertDown(dLink rec, dLink recSub)
 
             if(!strcmp(temp->lexName,recSub->lexName))
             {
-                printf("Same Variable Name in Record\n");
-                exit(0);
+                printf("line %d: Same Variable Name %s in Record\n", temp->lexName->line, temp->lexName->value);
             }
             prev=temp;
             temp=temp->down;
@@ -295,8 +306,7 @@ void insertGlo(symLink tab,dLink dRec)
         {
             if(!strcmp(temp->lexName,dRec->lexName))
             {
-                printf("Same Record or global Name in the global variable\n");
-                exit(0);
+                printf("Same Record or global Name %s in the global variable\n", temp->lexName->value);
             }
             prev=temp;
             temp=temp->next;
@@ -306,7 +316,6 @@ void insertGlo(symLink tab,dLink dRec)
 }
 void getTypeDef(symLink tab, parseTree typed)
 {
-    // typed =
     parseTree tempRec=typed;
     if(typed==NULL);
     else
@@ -340,15 +349,12 @@ void getTypeDef(symLink tab, parseTree typed)
                 //  printf("Checking inside if\n");
                 // printLex(tempRec->lexeme);
             }
-
-
         }
         insertGlo(tab,dRec);
         getTypeDef(tab,typed->left->down);
     }
 }
 
-// returns the final dlinks under stmts
 void getStmt(symLink tab, parseTree stmts,int nFunc){
     getDec(tab,stmts->down->left,nFunc);
 

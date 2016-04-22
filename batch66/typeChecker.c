@@ -23,7 +23,7 @@ void checkTree(parseTree ast, symLink tab, char* func, lex type){
             //printTreeNode(ast);
             typeId = getType(tab, ast->lexeme->value, func);
             if(typeId == NULL){
-                printf("ast = %s has not been initialized!!\n", ast->lexeme->value);
+                printf("line %d: variable <%s> has not been initialized!!\n", ast->lexeme->line, ast->lexeme->value);
                 return;
             }
         }
@@ -31,7 +31,7 @@ void checkTree(parseTree ast, symLink tab, char* func, lex type){
         if(strcmp(typeId->token, type->token)){
             //printf("type of variable is %s \n", type->token);
             //printf("typeId of left is %s \n", typeId->token);
-            printf("error!! types dont match %s is of type %s not %s \n", ast->lexeme->value, typeId->token, type->token);
+            printf("line %d: error!! types dont match %s is of type %s not %s \n", ast->lexeme->line, ast->lexeme->value, typeId->token, type->token);
             return;
         }
     }
@@ -48,9 +48,9 @@ int checkAssign(symLink tab, parseTree ast, parseTree funcNode){
 
     else if(ast != NULL && ast->val == 48 && ast->up->val != 26){
         // get the type of x in x <--- y
-        lex type = getType(tab, ast->down->lexeme->value, funcNode->lexeme->value);
+        lex type = getType  (tab, ast->down->lexeme->value, funcNode->lexeme->value);
         if(type == NULL){
-            printf("%s has not been initialized\n", ast->down->lexeme->value);
+            printf("line %d: variable <%s> has not been initialized\n", ast->lexeme->line, ast->down->lexeme->value);
             checkAssign(tab, ast->left, funcNode);
         }
         else{
@@ -64,4 +64,19 @@ int checkAssign(symLink tab, parseTree ast, parseTree funcNode){
         checkAssign(tab, ast->down, funcNode);
         checkAssign(tab, ast->left, funcNode);
     }
+}
+
+void checkType(symLink tab, parseTree ast){
+    parseTree temp = ast;
+    //temp has function name
+    temp = temp->down->down;
+
+    // for r2
+    while(temp != NULL){
+        //stmts has typedef or declaration
+        checkAssign(tab, temp, temp);
+        temp = temp->left;
+    }
+
+    checkAssign(tab, ast->down->left, ast->down->left);
 }

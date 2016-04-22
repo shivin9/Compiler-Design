@@ -44,7 +44,11 @@ int main(int argc, char* argv[]){
     parseTree headT;
     headT=create();
 
+    FILE* fp1 = fopen(argv[1], "a");
+    fprintf(fp1,"%c",'$');
+    fclose(fp1);
     FILE* fp = fopen(argv[1], "r");
+
     //FILE* fp1 = fopen(argv[2], "w");
 
     if(fp==NULL)
@@ -102,24 +106,9 @@ int main(int argc, char* argv[]){
     printf("s1 = %d, s2 = %d\n", sizeofTree(headT), sizeofTree(ast));
     symLink stab = createSym();
     getSymtable(stab, ast);
-    printSymTable(stab);
     testRules(stab, ast);
 
-    if(!searchTable(stab, "d3", "_main")){
-            printf("variable %s is undeclared\n", "d3");
-    }
-
-    //printf("present = %d\n", isPresent(stab, "c3b"));
-
-    // lex temp = getType(stab, "b3", "sumN");
-
-    // if(temp != NULL){
-    //     printf("type of var is %s\n", temp->value);
-    // }
-
-    // currently for main function only...
-    //checkAssign(stab, ast->down->left, ast->down->left);
-
+    printSymTable(stab);
     free(headT);
     free(ch);
     return 0;

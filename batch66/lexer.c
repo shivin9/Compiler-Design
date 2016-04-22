@@ -187,6 +187,7 @@ lexChain getAllTokens(FILE* fp){
     link new;
     // add initial node
 
+
     while(ch != '$'){
         ch = B[end];
         //printf("%c", ch);
@@ -236,13 +237,11 @@ lexChain getAllTokens(FILE* fp){
 
                     strcpy(new->lex->value, val);
                     strcpy(new->lex->token, tok);
-                    new->lex->line = lineNo;
+                    new->lex->line = lineNo++;
                     addNode(head1, new);
                     len=0;
                     clear(val);
                     clear(tok);
-
-
 
                     state = 0;
                     end++;
@@ -541,7 +540,7 @@ lexChain getAllTokens(FILE* fp){
                 else if(ch==' ' || ch=='\t'){
                     state = 0;
                     //printf("read blank\n");
-                    lineNo++;
+                    //lineNo++;
                     end++;
                     ch = B[end];
                     start = end;
