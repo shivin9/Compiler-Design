@@ -6,12 +6,15 @@
 
 #include "symData.h"
 
+int gflag=0;
+
 void r2(symLink tab, parseTree otherStmts, char* funcName){
     if(otherStmts == NULL)
         return;
     else if(otherStmts->val == 51){
         lex temp = getType(tab, otherStmts->lexeme->value, funcName);
         if(temp == NULL){
+            gflag=1;
             printf("line %d: variable <%s> is undeclared in function <%s>\n", otherStmts->lexeme->line, otherStmts->lexeme->value, funcName);
         }
     }
@@ -62,10 +65,15 @@ void compareFunc(symLink tab, parseTree ori, parseTree new, char* currFunc, int 
 
     if(cnt1 != cnt2){
         if(flag == 0)
+        {
+            gflag=1;
             printf("line %d: number of parameters passed to the function <%s> in the function <%s> doesnt match it's signature\n", new->line, ori->up->lexeme->value, currFunc);
-
+}
         if(flag == 1)
+        {
+            gflag=1;
             printf("line %d: number of output parameters passed to the function <%s> in the function <%s> doesnt match parameters passed in return\n", new->line, ori->up->lexeme->value, currFunc);
+}
         return;
     }
 
@@ -79,22 +87,27 @@ void compareFunc(symLink tab, parseTree ori, parseTree new, char* currFunc, int 
         // different for output and input parameters
 
         if(t1 == NULL)
-            printf("t1 is null\n");
+
 
         if(n1->val == 51){
-            // printTreeNode(n1);
-            // printf("currfunc is %s\n", currFunc);
+            printTreeNode(n1);
             t2 = getType(tab, n1->lexeme->value, currFunc);
             if(t2 == NULL){
+                gflag=1;
                 printf("line %d: %s doesnt exist in scope\n", n1->line, n1->lexeme->value);
             }
             else if(strcmp(t1->token, t2->token)){
                 if(flag == 0)
+                {
+                    gflag=1;
                     printf("line %d:  The type <%s> of variable <%s> returned does not match with the type <%s> of the formal output parameter <%s>", ori->line, t1->value, tempori->lexeme->value, t2->value, n1->lexeme->value);
+ }
 
                 if(flag == 1)
+                {
+                    gflag=1;
                     printf("line %d:  The type <%s> of variable <%s> in output list of function <%s> returned does not match with the type <%s> of the returned output parameter <%s>", ori->line, t1->value, tempori->lexeme->value, ori->up->lexeme->value, t2->value, n1->lexeme->value);
-            }
+            }}
 
             n1 = n1->left;
             if(n1->down == NULL)
@@ -150,8 +163,9 @@ void funcLoad(symLink tab)
             else{
 
                 if(!strcmp(tab->func[j]->lexeme->value,tab->func[i]->lexeme->value)){
+                    gflag=1;
                     printf("Function <%s> is overloaded\n", tab->func[j]->lexeme->value);
-                    exit(0);
+
                 }
             }
             j++;
@@ -165,6 +179,7 @@ void recurse(char *ch, parseTree temp){
     if(temp == NULL)
         return;
     else if(!strcmp(temp->lexeme->value,ch) && temp->up->val == 25){
+        gflag=1;
         printf("line %d: recursive definition of function <%s>\n", temp->line, ch);
     }
     else{
@@ -209,6 +224,7 @@ void checkFun(symLink tab, char *ch, parseTree temp, char* funName)
     }
 
     if(j == mark){
+        gflag=1;
         printf("line %d: Undefined Function <%s> is being used\n", temp->line, ch);
     }
 }
@@ -279,7 +295,7 @@ void dowhile(symLink tab, parseTree ast){
     }
 }
 
-void testRules(symLink tab, parseTree ast){
+int testRules(symLink tab, parseTree ast){
     parseTree temp = ast, otherstmts;
 
     //temp has function name
@@ -319,5 +335,5 @@ void testRules(symLink tab, parseTree ast){
     funcRecur(ast->down);
     funcLoad(tab);
     othFunCheck(tab, ast->down);
+    return gflag;
 }
-

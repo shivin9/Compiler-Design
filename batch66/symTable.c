@@ -176,7 +176,7 @@ int isGlobal(symLink tab, char* name){
 }
 
 // linked list of int/real
-void getDec(symLink tab, parseTree declarations, int nFunc)
+void getDec(symLink tab, parseTree declarations, int nFunc, int offset)
 {
     parseTree dec = declarations->down;
     while(dec != NULL){
@@ -186,11 +186,21 @@ void getDec(symLink tab, parseTree declarations, int nFunc)
         if(dec->down != NULL)
             cpyLex(dvar->lexType,dec->down->lexeme);
 
+        if(!strcpy(dec->down->lexeme->token, "TK_INT")){
+            dvar->offset = offset;
+            offset += 2;
+        }
+
+        else{
+            dvar->offset = offset;
+            offset += 4;
+        }
+
         lex type1 = getType(tab, dvar->lexName->value,tab->func[nFunc]->lexeme->value);
         // to check whether a variable is being reinitialized
         //printLex();
         if(type1 != NULL){
-            printf("line %d: variable <%s> of type <%s> already declared\n", dec->line, dvar->lexName->value, dvar->lexType->value);
+            printf("\n\nline %d: variable <%s> of type <%s> already declared\n\n", dec->line, dvar->lexName->value, dvar->lexType->value);
         }
 
         else if((dec->down->left)!=NULL)
@@ -283,8 +293,7 @@ void insertDown(dLink rec, dLink recSub)
     }
 }
 
-void insertGlo(symLink tab,dLink dRec)
-{
+void insertGlo(symLink tab,dLink dRec){
     dLink prev,temp=tab->glo;
 
     prev=temp;
@@ -312,40 +321,29 @@ void getTypeDef(symLink tab, parseTree typed)
         tempRec=tempRec->down;
         dLink dRec= createData();
         dRec->rec=1;
-        //printf("tempRec = ");
-        //printTreeNode(tempRec);
         cpyLex(dRec->lexName,tempRec->lexeme);
         strcpy(dRec->lexType->value, dRec->lexType->value);
         tempRec=tempRec->left->down;
-        //printLex(tempRec->lexeme);
         int i=0;
         while(tempRec != NULL)
         {
-            //printLex(tempRec->lexeme);
             dLink dRecSub= createData();
             cpyLex(dRecSub->lexType,tempRec->down->lexeme);
             cpyLex(dRecSub->lexName,tempRec->down->left->lexeme);
-            //printf("tempRec->down = ");
-            // printLex(tempRec->down->lexeme);
-            // printLex(tempRec->down->left->lexeme);
+
             insertDown(dRec,dRecSub);
             tempRec=tempRec->left;
-            //printLex(tempRec->lexeme);
             i++;
             if(i>=2)
-            {
                 tempRec=tempRec->down;
-                //  printf("Checking inside if\n");
-                // printLex(tempRec->lexeme);
-            }
         }
         insertGlo(tab,dRec);
         getTypeDef(tab,typed->left->down);
     }
 }
 
-void getStmt(symLink tab, parseTree stmts,int nFunc){
-    getDec(tab,stmts->down->left,nFunc);
+void getStmt(symLink tab, parseTree stmts,int nFunc, int offset){
+    getDec(tab, stmts->down->left, nFunc, offset);
 
     //printLex(stmts->down->left);
     getTypeDef(tab,stmts->down->down);
@@ -354,7 +352,7 @@ void getStmt(symLink tab, parseTree stmts,int nFunc){
 // filling function in symbol table
 void insertFunc(symLink tab, parseTree ast)
 {
-    int nFunc = tab->nFunc;
+    int nFunc = tab->nFunc, offset = 0;
 
     // initialize lexeme of func
     tab->func[nFunc]->lexeme = getNewlex();
@@ -383,6 +381,15 @@ void insertFunc(symLink tab, parseTree ast)
 
         cpyLex(dinp->lexName, tempIn->lexeme);
         cpyLex(dinp->lexType, tempIn->down->lexeme);
+        if(!strcpy(tempIn->down->lexeme->token, "TK_INT")){
+            dinp->offset = offset;
+            offset += 2;
+        }
+
+        else{
+            dinp->offset = offset;
+            offset += 4;
+        }
 
         // handling the first case separately
         if(tab->func[nFunc]->inp == NULL){
@@ -406,6 +413,18 @@ void insertFunc(symLink tab, parseTree ast)
 
         cpyLex(outVars->lexName,tempOut->lexeme);
         cpyLex(outVars->lexType,tempOut->down->lexeme);
+
+        if(!strcpy(tempOut->down->lexeme->token, "TK_INT")){
+            outVars->offset = offset;
+            offset += 2;
+        }
+
+        else{
+            outVars->offset = offset;
+            offset += 4;
+        }
+
+
         if(tab->func[nFunc]->out==NULL){
             tab->func[nFunc]->out=outVars;
         }
@@ -420,7 +439,7 @@ void insertFunc(symLink tab, parseTree ast)
         }
         tempOut=tempOut->down->left;
     }
-    getStmt(tab,tempVar,nFunc);
+    getStmt(tab,tempVar,nFunc, offset);
 }
 
 void getSymtable(symLink s, parseTree ast)

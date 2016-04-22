@@ -1,10 +1,3 @@
-/*
-   BATCH NUMBER - 66
-   SHIVIN SRIVASTAVA - 2013A7PS073P
-   UPADHYAY GAURAV ARVIND - 2013A7PS030P
-   */
-
-
 #include "parserDef.h"
 
 // node for data type storage and other information

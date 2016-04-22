@@ -1,8 +1,8 @@
 /*
-    BATCH NUMBER - 66
-    SHIVIN SRIVASTAVA - 2013A7PS073P
-    UPADHYAY GAURAV ARVIND - 2013A7PS030P
-*/
+   BATCH NUMBER - 66
+   SHIVIN SRIVASTAVA - 2013A7PS073P
+   UPADHYAY GAURAV ARVIND - 2013A7PS030P
+   */
 
 //#include "parserDef.h"
 #include "symData.h"
@@ -10,11 +10,16 @@
 #include <fcntl.h>
 int main(int argc, char* argv[]){
     if(argc == 1){
-        printf("****enter the name of file****\n");
+        printf("****enter the name of testcase****\n");
         exit(0);
     }
 
-    else if(argc > 2){
+    else if(argc == 2){
+        printf("****enter the name of file for asm code****\n");
+        exit(0);
+    }
+
+    else if(argc > 3){
         printf("****wrong format****\n");
         exit(0);
     }
@@ -34,10 +39,10 @@ int main(int argc, char* argv[]){
     printf("Do you want to print the ast tree?\n");
     scanf("%d",&asTree);
 
-    printf("Allocated memory and number of nodes to each of parse tree  and abstract syntax tree for the test case used.\n");
+    printf("Do you want to see the statistics for AST and parsetree?\n");
     scanf("%d",&pA);
 
-    printf("do you want to print Symbol Table?\n");
+    printf("Do you want to print Symbol Table?\n");
     scanf("%d",&sT);
 
     printf("Semantic errors?\n");
@@ -79,14 +84,17 @@ int main(int argc, char* argv[]){
         printTree(headT);
 
     }
-
+    if(!parse){
+        printf("\ncant progress forward without checking syntactic correctness\n");
+        exit(0);
+    }
     int ntree =sizeofTree(headT);
     int stree =sizeof(Node)*ntree;
 
-     parseTree ast = createAst(headT);
+    parseTree ast = createAst(headT);
 
-     int nast= sizeofTree(ast);
-     int sast =sizeof(Node)*nast;
+    int nast= sizeofTree(ast);
+    int sast =sizeof(Node)*nast;
 
     float comp=(((float)(stree-sast))/stree)*100;
 
@@ -97,9 +105,9 @@ int main(int argc, char* argv[]){
     if(pA)
     {
 
-      printf("Parse tree Number of nodes= %d  Allocated Memory  = %d\n",ntree,stree);
-      printf("AST        Number of nodes= %d  Allocated Memory  = %d\n",nast,sast);
-      printf("Compression percentage = %f\n",comp);
+        printf("Parse tree Number of nodes= %d  Allocated Memory  = %d\n",ntree,stree);
+        printf("AST        Number of nodes= %d  Allocated Memory  = %d\n",nast,sast);
+        printf("Compression percentage = %f\n",comp);
     }
     symLink stab = createSym();
     getSymtable(stab, ast);
@@ -107,19 +115,21 @@ int main(int argc, char* argv[]){
     if(sT)
     {
 
-       printf("Lexeme(identifier)    type   scope(name of the function/global)       offset  \n");
-       printSymTable(stab);
+        printf("Lexeme(identifier)    type   scope(name of the function/global)       offset  \n");
+        printSymTable(stab);
     }
     if(semE)
     {
+        int gflag = testRules(stab, ast);
 
-       testRules(stab, ast);
+        if(!gflag)
+            printf("Code compiles successfully..........");
     }
 
     if(code)
     {
-    FILE* fpcode = fopen(argv[2], "w");
-    generateCode(ast, fpcode);
+        FILE* fpcode = fopen(argv[2], "w");
+        generateCode(ast, fpcode);
     }
     free(headT);
     free(ch);
