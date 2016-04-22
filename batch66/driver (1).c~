@@ -30,11 +30,11 @@ int main(int argc, char* argv[]){
 
     printf("do you want verify syntactic correctness of the code?\n");
     scanf("%d", &parse);
-
+   
     printf("Do you want to print the ast tree?\n");
     scanf("%d",&asTree);
 
-    printf("Allocated memory and number of nodes to each of parse tree  and abstract syntax tree for the test case used.\n");
+    printf("Allocated memory and number of nodes to each of parse tree 	and abstract syntax tree for the test case used.\n");
     scanf("%d",&pA);
 
     printf("do you want to print Symbol Table?\n");
@@ -45,7 +45,7 @@ int main(int argc, char* argv[]){
 
     printf("Assembly Code\n");
     scanf("%d",&code);
-
+   
     parseTree headT;
     headT=create();
 
@@ -63,63 +63,64 @@ int main(int argc, char* argv[]){
     lexChain ch;
     ch = getAllTokens(fp);
 
-
+   
     if(toklist)
     {
-
+      
         printList(ch);
     }
-
+   
 
     if(parse){
-
+      
         parseInputSourceCode(headT, fp, ch);
         fixTree(headT, ch);
         printf("\nlexemeCurrentNode     lineno   token   valueIfNumber   parentNodeSymbol   isLeafNode(yes/no)    NodeSymbol\n");
         printTree(headT);
-
+        
     }
-
+    
     int ntree =sizeofTree(headT);
     int stree =sizeof(Node)*ntree;
-
+   
      parseTree ast = createAst(headT);
-
+    
      int nast= sizeofTree(ast);
      int sast =sizeof(Node)*nast;
-
+     
     float comp=(((float)(stree-sast))/stree)*100;
-
+     
     if(asTree)
-    {
+    {      
         printTree(ast);
-    }
+    } 
     if(pA)
-    {
-
+    {   
+      
       printf("Parse tree Number of nodes= %d  Allocated Memory  = %d\n",ntree,stree);
       printf("AST        Number of nodes= %d  Allocated Memory  = %d\n",nast,sast);
       printf("Compression percentage = %f\n",comp);
     }
     symLink stab = createSym();
     getSymtable(stab, ast);
-
+    
     if(sT)
     {
-
+      
        printf("Lexeme(identifier)    type   scope(name of the function/global)       offset  \n");
        printSymTable(stab);
     }
     if(semE)
     {
-
+      
        testRules(stab, ast);
     }
 
     if(code)
     {
-    FILE* fpcode = fopen(argv[2], "w");
-    generateCode(ast, fpcode);
+	FILE* fpcode = fopen(argv[2], "w");
+	generateCode(ast, fpcode);
+       
     }
     free(headT);
     free(ch);

@@ -31,7 +31,7 @@ void checkTree(parseTree ast, symLink tab, char* func, lex type){
         if(strcmp(typeId->token, type->token)){
             //printf("type of variable is %s \n", type->token);
             //printf("typeId of left is %s \n", typeId->token);
-            printf("line %d: error!! types dont match %s is of type %s not %s \n", ast->lexeme->line, ast->lexeme->value, typeId->token, type->token);
+            printf("line %d: types dont match... <%s> is of type <%s> not <%s> \n", ast->lexeme->line, ast->lexeme->value, typeId->token, type->token);
             return;
         }
     }

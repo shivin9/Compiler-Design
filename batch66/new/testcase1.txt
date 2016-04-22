@@ -1,7 +1,7 @@
 %Test Case 1
 %Following function computes the sum of user defined real numbers
 %The variable d3 maintains the sum of values
-_sumN  input parameter list [real d5cc34]  
+_sumN  input parameter list [int d5cc34]  
 output parameter list[real d3];
 	type int : b5b567:global;
 	type int : b3;
@@ -25,6 +25,9 @@ _main
 	write(c4bd56);
 	return;
 end
+
+
+
+
 $
-$$$$$$
-$$$$$$$$$$$$$$$
+$$$$$$$$$$

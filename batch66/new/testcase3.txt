@@ -1,4 +1,5 @@
-_swpints input parameter list [int b2b, int b2c]   
+_swpints
+input parameter list [int b2b, int b2c]   
 output parameter list[int c2b, int c2c]; 
 
 c2b<---b2c;
@@ -6,7 +7,8 @@ c2c<---b2b;
 return [c2b, c2c]; 
 end 
 
-_swprecs input parameter list [record #rec d5b, record #rec d2c]   
+_swprecs
+input parameter list [record #rec d5b, record #rec d2c]   
 output parameter list[record #rec d5c, record #rec d2b]; 
 type int : b3;
 
@@ -33,5 +35,4 @@ d5b.height <---20;
 write(b2);
 write(c2);
 end
-$
-$
+$$$$$$$

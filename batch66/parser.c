@@ -886,7 +886,7 @@ void collapseChains(parseTree ast){
 
     int tok_val = ast->val;
 
-    if(ast->prev != NULL && ast->left== NULL && (tok_val== 2 || tok_val == 20 || tok_val == 10 || tok_val == 17 || tok_val == 13 || tok_val == 15)){
+    if(ast->prev != NULL && ast->left== NULL && (tok_val== 2 /*|| tok_val == 20*/ || tok_val == 10 || tok_val == 17 || tok_val == 13 || tok_val == 15)){
         //printf("collapsing %s\n", terms[ast->val]);
 
         ast->prev->left = ast->down;
@@ -931,15 +931,11 @@ void fixPara(parseTree ast){
             temp = ast->down->left->left;
 
         ast->prev->left = ast->down->left;
-        // printf("ast->prev->left = %s\n", terms[ast->prev->left->val]);
 
         ast->down->left->prev = ast->prev;
-        // printf("ast->down->left->prev = %s\n", terms[ast->down->left->prev->val]);
         ast->down->up = ast->down->left;
-        // printf("ast->down->up = %s\n", terms[ast->down->up->val]);
         ast->down->left->up = ast->up;
         ast->down->left->down = ast->down;
-        // printf("ast->down->left->down = %s\n", terms[ast->down->left->down->val]);
 
         if(ast->down->left->left != NULL)
             ast->down->left->left->up = ast->up;

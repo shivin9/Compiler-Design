@@ -7,7 +7,7 @@
 % atleast one input parameter
 
 _addRecords input parameter list[int b2, record #marks c3b5, record #marks c3b6]
-output parameter list [ record #marks b3c45];
+output parameter list [record #marks b3c45];
 	[c3b5] <---call _readMarks with parameters [b2];
 	[c3b6]<---call _readMarks with parameters [b2];
 	b3c45 <--- c3b5 + c3b6;
@@ -58,6 +58,5 @@ _main
 	write(d4.chemistry);
 	return;
 end
-$$
 $
 $$
