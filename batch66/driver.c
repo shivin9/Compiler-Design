@@ -129,7 +129,7 @@ int main(int argc, char* argv[]){
     if(code)
     {
         FILE* fpcode = fopen(argv[2], "w");
-        generateCode(ast, fpcode);
+        //generateCode(ast, fpcode);
     }
     free(headT);
     free(ch);

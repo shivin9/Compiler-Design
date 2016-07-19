@@ -1,5 +1,5 @@
 output: lexer.o parser.o driver.o symTable.o typeChecker.o semantic.o codegen.o
-	gcc -w driver.o symTable.o parser.o lexer.o typeChecker.o semantic.o codegen.o -o toycompiler
+	gcc -w -O3 driver.o symTable.o parser.o lexer.o typeChecker.o semantic.o codegen.o -o toycompiler
 
 lexer.o: lexerDef.h lexer.c 
 	gcc -w -c -g lexer.c
